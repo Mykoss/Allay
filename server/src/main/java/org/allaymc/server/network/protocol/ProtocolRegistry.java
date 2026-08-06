@@ -3,6 +3,7 @@ package org.allaymc.server.network.protocol;
 import org.allaymc.api.registry.Registries;
 import org.allaymc.server.item.creative.AllayCreativeItemRegistry;
 import org.allaymc.server.network.protocol.v1001.Protocol_v1001;
+import org.allaymc.server.network.protocol.v2168.Protocol_v2168;
 import org.allaymc.server.network.protocol.v766.Protocol_v766_NetEase;
 import org.allaymc.server.network.protocol.v818.Protocol_v818;
 import org.allaymc.server.network.protocol.v819.Protocol_v819;
@@ -170,6 +171,7 @@ public final class ProtocolRegistry {
         supported.add(new Protocol_v944());
         supported.add(new Protocol_v975());
         supported.add(new Protocol_v1001());
+        supported.add(new Protocol_v2168());
 
         for (var protocol : supported) {
             protocol.initialize();

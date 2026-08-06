@@ -496,6 +496,7 @@ public class PlayerAuthInputPacketProcessor extends PacketProcessor<PlayerAuthIn
             case TOUCH -> InputMode.TOUCH;
             case GAMEPAD -> InputMode.GAMEPAD;
             case MOTION_CONTROLLER -> InputMode.MOTION_CONTROLLER;
+            case COUNT -> InputMode.UNDEFINED;
         };
         var oldInputMode = player.getInputMode();
 
@@ -516,6 +517,7 @@ public class PlayerAuthInputPacketProcessor extends PacketProcessor<PlayerAuthIn
             case TOUCH -> InputInteractionModel.TOUCH;
             case CROSSHAIR -> InputInteractionModel.CROSSHAIR;
             case CLASSIC -> InputInteractionModel.CLASSIC;
+            case COUNT -> InputInteractionModel.CLASSIC;
         };
         var oldInteractionModel = player.getInputInteractionModel();
 
