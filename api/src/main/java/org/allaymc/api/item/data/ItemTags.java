@@ -173,6 +173,8 @@ public interface ItemTags {
 
     ItemTag IS_AXE = create("minecraft:is_axe");
 
+    ItemTag MUSHROOMS_FOR_STEW = create("minecraft:mushrooms_for_stew");
+
     static ItemTag create(String name) {
         var tag = new ItemTag(name);
         NAME_TO_TAG.put(name, tag);

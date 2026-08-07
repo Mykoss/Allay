@@ -1703,6 +1703,8 @@ public enum BlockId {
 
     ORANGE_GLAZED_TERRACOTTA("minecraft:orange_glazed_terracotta"),
 
+    ORANGE_POPLAR_LEAVES("minecraft:orange_poplar_leaves"),
+
     ORANGE_SHULKER_BOX("minecraft:orange_shulker_box"),
 
     ORANGE_STAINED_GLASS("minecraft:orange_stained_glass"),
@@ -1935,6 +1937,40 @@ public enum BlockId {
 
     POLISHED_TUFF_WALL("minecraft:polished_tuff_wall"),
 
+    POPLAR_BUTTON("minecraft:poplar_button"),
+
+    POPLAR_DOOR("minecraft:poplar_door"),
+
+    POPLAR_DOUBLE_SLAB("minecraft:poplar_double_slab"),
+
+    POPLAR_FENCE("minecraft:poplar_fence"),
+
+    POPLAR_FENCE_GATE("minecraft:poplar_fence_gate"),
+
+    POPLAR_HANGING_SIGN("minecraft:poplar_hanging_sign"),
+
+    POPLAR_LOG("minecraft:poplar_log"),
+
+    POPLAR_PLANKS("minecraft:poplar_planks"),
+
+    POPLAR_PRESSURE_PLATE("minecraft:poplar_pressure_plate"),
+
+    POPLAR_SAPLING("minecraft:poplar_sapling"),
+
+    POPLAR_SHELF("minecraft:poplar_shelf"),
+
+    POPLAR_SLAB("minecraft:poplar_slab"),
+
+    POPLAR_STAIRS("minecraft:poplar_stairs"),
+
+    POPLAR_STANDING_SIGN("minecraft:poplar_standing_sign"),
+
+    POPLAR_TRAPDOOR("minecraft:poplar_trapdoor"),
+
+    POPLAR_WALL_SIGN("minecraft:poplar_wall_sign"),
+
+    POPLAR_WOOD("minecraft:poplar_wood"),
+
     POPPY("minecraft:poppy"),
 
     PORTAL("minecraft:portal"),
@@ -2050,6 +2086,8 @@ public enum BlockId {
     RED_NETHER_BRICK_STAIRS("minecraft:red_nether_brick_stairs"),
 
     RED_NETHER_BRICK_WALL("minecraft:red_nether_brick_wall"),
+
+    RED_POPLAR_LEAVES("minecraft:red_poplar_leaves"),
 
     RED_SAND("minecraft:red_sand"),
 
@@ -2281,6 +2319,8 @@ public enum BlockId {
 
     STONECUTTER_BLOCK("minecraft:stonecutter_block"),
 
+    STRAW_BED("minecraft:straw_bed"),
+
     STRIPPED_ACACIA_LOG("minecraft:stripped_acacia_log"),
 
     STRIPPED_ACACIA_WOOD("minecraft:stripped_acacia_wood"),
@@ -2318,6 +2358,10 @@ public enum BlockId {
     STRIPPED_PALE_OAK_LOG("minecraft:stripped_pale_oak_log"),
 
     STRIPPED_PALE_OAK_WOOD("minecraft:stripped_pale_oak_wood"),
+
+    STRIPPED_POPLAR_LOG("minecraft:stripped_poplar_log"),
+
+    STRIPPED_POPLAR_WOOD("minecraft:stripped_poplar_wood"),
 
     STRIPPED_SPRUCE_LOG("minecraft:stripped_spruce_log"),
 
@@ -2702,6 +2746,8 @@ public enum BlockId {
     YELLOW_CONCRETE_POWDER("minecraft:yellow_concrete_powder"),
 
     YELLOW_GLAZED_TERRACOTTA("minecraft:yellow_glazed_terracotta"),
+
+    YELLOW_POPLAR_LEAVES("minecraft:yellow_poplar_leaves"),
 
     YELLOW_SHULKER_BOX("minecraft:yellow_shulker_box"),
 

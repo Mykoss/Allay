@@ -1539,6 +1539,9 @@
     "minecraft:pale_oak_trapdoor": {
       "direction": "direction_4"
     },
+    "minecraft:poplar_trapdoor": {
+      "direction": "direction_4"
+    },
     "minecraft:rail": {
       "rail_direction": "rail_direction_10"
     },

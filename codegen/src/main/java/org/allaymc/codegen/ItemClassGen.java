@@ -158,6 +158,9 @@ public class ItemClassGen extends BaseClassGen {
 
     private static void registerMergedItems() {
         registerMergedItem(Pattern.compile(".*SpawnEggStack"), "ItemSpawnEggStack");
+        registerMergedItem(Pattern.compile("ItemItem.*BedStack"), "ItemItemBedStack");
+        registerMergedItem(Pattern.compile(".*BedStack"), "ItemBedStack");
+        registerMergedItem(Pattern.compile(".*CushionStack"), "ItemCushionStack");
         registerMergedItem(Pattern.compile(".*SwordStack"), "ItemSwordStack");
         registerMergedItem(Pattern.compile(".*PickaxeStack"), "ItemPickaxeStack");
         registerMergedItem(Pattern.compile(".*ShovelStack"), "ItemShovelStack");

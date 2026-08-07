@@ -14,6 +14,7 @@ Unless otherwise specified, any version comparison below is the comparison of th
 
 ### Added
 
+- Added support for MCBE 1.26.40 (protocol v2168), including poplar wood variants, colored cushions, and straw beds.
 - Added support for NetEase protocol v860 (Minecraft 1.21.124).
 - Introduced new multi version architecture (mvv2).
 

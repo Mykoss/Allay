@@ -121,6 +121,8 @@ public interface BlockTags {
 
     BlockTag LEAVES = create("minecraft:leaves");
 
+    BlockTag CORNERABLE_STAIRS = create("minecraft:cornerable_stairs");
+
     static BlockTag create(String name) {
         var tag = new BlockTag(name);
         NAME_TO_TAG.put(name, tag);

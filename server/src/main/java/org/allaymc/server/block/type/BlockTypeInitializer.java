@@ -317,6 +317,9 @@ public final class BlockTypeInitializer {
         BlockTypes.OAK_LEAVES = buildLeaves(BlockId.OAK_LEAVES, ItemId.OAK_SAPLING, true, false);
         BlockTypes.SPRUCE_LEAVES = buildLeaves(BlockId.SPRUCE_LEAVES, ItemId.SPRUCE_SAPLING);
         BlockTypes.PALE_OAK_LEAVES = buildLeaves(BlockId.PALE_OAK_LEAVES, ItemId.PALE_OAK_SAPLING);
+        BlockTypes.ORANGE_POPLAR_LEAVES = buildLeaves(BlockId.ORANGE_POPLAR_LEAVES, ItemId.POPLAR_SAPLING);
+        BlockTypes.RED_POPLAR_LEAVES = buildLeaves(BlockId.RED_POPLAR_LEAVES, ItemId.POPLAR_SAPLING);
+        BlockTypes.YELLOW_POPLAR_LEAVES = buildLeaves(BlockId.YELLOW_POPLAR_LEAVES, ItemId.POPLAR_SAPLING);
     }
 
     private static BlockType<BlockLeavesBehavior> buildLeaves(BlockId id, ItemId saplingId) {
@@ -583,6 +586,7 @@ public final class BlockTypeInitializer {
         BlockTypes.TUFF_STAIRS = buildStairs(BlockId.TUFF_STAIRS);
         BlockTypes.WARPED_STAIRS = buildStairs(BlockId.WARPED_STAIRS);
         BlockTypes.PALE_OAK_STAIRS = buildStairs(BlockId.PALE_OAK_STAIRS);
+        BlockTypes.POPLAR_STAIRS = buildStairs(BlockId.POPLAR_STAIRS);
 
         BiFunction<OxidationLevel, Boolean, BlockType<? extends BlockOxidationComponent>> cutCopperStairs = (level, waxed) -> switch (level) {
             case UNAFFECTED -> waxed ? BlockTypes.WAXED_CUT_COPPER_STAIRS : BlockTypes.CUT_COPPER_STAIRS;
@@ -655,6 +659,7 @@ public final class BlockTypeInitializer {
         BlockTypes.NORMAL_STONE_SLAB = buildSlab(BlockId.NORMAL_STONE_SLAB, BlockId.NORMAL_STONE_DOUBLE_SLAB);
         BlockTypes.OAK_SLAB = buildSlab(BlockId.OAK_SLAB, BlockId.OAK_DOUBLE_SLAB);
         BlockTypes.PALE_OAK_SLAB = buildSlab(BlockId.PALE_OAK_SLAB, BlockId.PALE_OAK_DOUBLE_SLAB);
+        BlockTypes.POPLAR_SLAB = buildSlab(BlockId.POPLAR_SLAB, BlockId.POPLAR_DOUBLE_SLAB);
         BlockTypes.PETRIFIED_OAK_SLAB = buildSlab(BlockId.PETRIFIED_OAK_SLAB, BlockId.PETRIFIED_OAK_DOUBLE_SLAB);
         BlockTypes.POLISHED_ANDESITE_SLAB = buildSlab(BlockId.POLISHED_ANDESITE_SLAB, BlockId.POLISHED_ANDESITE_DOUBLE_SLAB);
         BlockTypes.POLISHED_BLACKSTONE_BRICK_SLAB = buildSlab(BlockId.POLISHED_BLACKSTONE_BRICK_SLAB, BlockId.POLISHED_BLACKSTONE_BRICK_DOUBLE_SLAB);
@@ -733,6 +738,7 @@ public final class BlockTypeInitializer {
         BlockTypes.NORMAL_STONE_DOUBLE_SLAB = buildDoubleSlab(BlockId.NORMAL_STONE_DOUBLE_SLAB, BlockId.NORMAL_STONE_SLAB);
         BlockTypes.OAK_DOUBLE_SLAB = buildDoubleSlab(BlockId.OAK_DOUBLE_SLAB, BlockId.OAK_SLAB);
         BlockTypes.PALE_OAK_DOUBLE_SLAB = buildDoubleSlab(BlockId.PALE_OAK_DOUBLE_SLAB, BlockId.PALE_OAK_SLAB);
+        BlockTypes.POPLAR_DOUBLE_SLAB = buildDoubleSlab(BlockId.POPLAR_DOUBLE_SLAB, BlockId.POPLAR_SLAB);
         BlockTypes.PETRIFIED_OAK_DOUBLE_SLAB = buildDoubleSlab(BlockId.PETRIFIED_OAK_DOUBLE_SLAB, BlockId.PETRIFIED_OAK_SLAB);
         BlockTypes.POLISHED_ANDESITE_DOUBLE_SLAB = buildDoubleSlab(BlockId.POLISHED_ANDESITE_DOUBLE_SLAB, BlockId.POLISHED_ANDESITE_SLAB);
         BlockTypes.POLISHED_BLACKSTONE_BRICK_DOUBLE_SLAB = buildDoubleSlab(BlockId.POLISHED_BLACKSTONE_BRICK_DOUBLE_SLAB, BlockId.POLISHED_BLACKSTONE_BRICK_SLAB);
@@ -885,6 +891,7 @@ public final class BlockTypeInitializer {
         BlockTypes.SPRUCE_LOG = buildWood(BlockId.SPRUCE_LOG, BlockId.STRIPPED_SPRUCE_LOG);
         BlockTypes.WARPED_STEM = buildWood(BlockId.WARPED_STEM, BlockId.STRIPPED_WARPED_STEM);
         BlockTypes.PALE_OAK_LOG = buildWood(BlockId.PALE_OAK_LOG, BlockId.STRIPPED_PALE_OAK_LOG);
+        BlockTypes.POPLAR_LOG = buildWood(BlockId.POPLAR_LOG, BlockId.STRIPPED_POPLAR_LOG);
         // Stripped Log
         BlockTypes.STRIPPED_ACACIA_LOG = buildStrippedWood(BlockId.STRIPPED_ACACIA_LOG);
         BlockTypes.STRIPPED_BAMBOO_BLOCK = buildStrippedWood(BlockId.STRIPPED_BAMBOO_BLOCK);
@@ -898,6 +905,7 @@ public final class BlockTypeInitializer {
         BlockTypes.STRIPPED_SPRUCE_LOG = buildStrippedWood(BlockId.STRIPPED_SPRUCE_LOG);
         BlockTypes.STRIPPED_WARPED_STEM = buildStrippedWood(BlockId.STRIPPED_WARPED_STEM);
         BlockTypes.STRIPPED_PALE_OAK_LOG = buildStrippedWood(BlockId.STRIPPED_PALE_OAK_LOG);
+        BlockTypes.STRIPPED_POPLAR_LOG = buildStrippedWood(BlockId.STRIPPED_POPLAR_LOG);
 
         // Wood
         BlockTypes.ACACIA_WOOD = buildWood(BlockId.ACACIA_WOOD, BlockId.STRIPPED_ACACIA_WOOD);
@@ -911,6 +919,7 @@ public final class BlockTypeInitializer {
         BlockTypes.CHERRY_WOOD = buildWood(BlockId.CHERRY_WOOD, BlockId.STRIPPED_CHERRY_WOOD);
         BlockTypes.MANGROVE_WOOD = buildWood(BlockId.MANGROVE_WOOD, BlockId.STRIPPED_MANGROVE_WOOD);
         BlockTypes.PALE_OAK_WOOD = buildWood(BlockId.PALE_OAK_WOOD, BlockId.STRIPPED_PALE_OAK_WOOD);
+        BlockTypes.POPLAR_WOOD = buildWood(BlockId.POPLAR_WOOD, BlockId.STRIPPED_POPLAR_WOOD);
         // Stripped Wood
         BlockTypes.STRIPPED_ACACIA_WOOD = buildStrippedWood(BlockId.STRIPPED_ACACIA_WOOD);
         BlockTypes.STRIPPED_BIRCH_WOOD = buildStrippedWood(BlockId.STRIPPED_BIRCH_WOOD);
@@ -923,6 +932,7 @@ public final class BlockTypeInitializer {
         BlockTypes.STRIPPED_CHERRY_WOOD = buildStrippedWood(BlockId.STRIPPED_CHERRY_WOOD);
         BlockTypes.STRIPPED_MANGROVE_WOOD = buildStrippedWood(BlockId.STRIPPED_MANGROVE_WOOD);
         BlockTypes.STRIPPED_PALE_OAK_WOOD = buildStrippedWood(BlockId.STRIPPED_PALE_OAK_WOOD);
+        BlockTypes.STRIPPED_POPLAR_WOOD = buildStrippedWood(BlockId.STRIPPED_POPLAR_WOOD);
     }
 
     private static <T extends BlockBehavior> BlockType<T> buildStrippedWood(BlockId blockId) {
@@ -951,6 +961,7 @@ public final class BlockTypeInitializer {
         BlockTypes.WARPED_BUTTON = buildWoodenButton(BlockId.WARPED_BUTTON);
         BlockTypes.WOODEN_BUTTON = buildWoodenButton(BlockId.WOODEN_BUTTON);
         BlockTypes.PALE_OAK_BUTTON = buildWoodenButton(BlockId.PALE_OAK_BUTTON);
+        BlockTypes.POPLAR_BUTTON = buildWoodenButton(BlockId.POPLAR_BUTTON);
 
         BlockTypes.POLISHED_BLACKSTONE_BUTTON = buildButton(BlockId.POLISHED_BLACKSTONE_BUTTON, blockType -> new BlockButtonBaseComponentImpl(blockType, Duration.ofSeconds(1)));
         BlockTypes.STONE_BUTTON = buildButton(BlockId.STONE_BUTTON, blockType -> new BlockButtonBaseComponentImpl(blockType, Duration.ofSeconds(1)));
@@ -969,6 +980,7 @@ public final class BlockTypeInitializer {
         BlockTypes.SPRUCE_DOOR = buildDoor(BlockId.SPRUCE_DOOR);
         BlockTypes.WARPED_DOOR = buildDoor(BlockId.WARPED_DOOR);
         BlockTypes.PALE_OAK_DOOR = buildDoor(BlockId.PALE_OAK_DOOR);
+        BlockTypes.POPLAR_DOOR = buildDoor(BlockId.POPLAR_DOOR);
 
         BlockTypes.IRON_DOOR = doorBuilder(BlockIronDoorBehaviorImpl.class, BlockId.IRON_DOOR, BlockIronDoorBaseComponentImpl::new).build();
 
@@ -1061,6 +1073,7 @@ public final class BlockTypeInitializer {
         BlockTypes.SPRUCE_WALL_SIGN = buildWallSign(BlockId.SPRUCE_WALL_SIGN, ItemId.SPRUCE_SIGN);
         BlockTypes.WARPED_WALL_SIGN = buildWallSign(BlockId.WARPED_WALL_SIGN, ItemId.WARPED_SIGN);
         BlockTypes.PALE_OAK_WALL_SIGN = buildWallSign(BlockId.PALE_OAK_WALL_SIGN, ItemId.PALE_OAK_SIGN);
+        BlockTypes.POPLAR_WALL_SIGN = buildWallSign(BlockId.POPLAR_WALL_SIGN, ItemId.POPLAR_SIGN);
     }
 
     private static <T extends BlockBehavior> BlockType<T> buildWallSign(BlockId blockId, ItemId dropItemId) {
@@ -1086,6 +1099,7 @@ public final class BlockTypeInitializer {
         BlockTypes.SPRUCE_STANDING_SIGN = buildStandingSign(BlockId.SPRUCE_STANDING_SIGN, ItemId.SPRUCE_SIGN);
         BlockTypes.WARPED_STANDING_SIGN = buildStandingSign(BlockId.WARPED_STANDING_SIGN, ItemId.WARPED_SIGN);
         BlockTypes.PALE_OAK_STANDING_SIGN = buildStandingSign(BlockId.PALE_OAK_STANDING_SIGN, ItemId.PALE_OAK_SIGN);
+        BlockTypes.POPLAR_STANDING_SIGN = buildStandingSign(BlockId.POPLAR_STANDING_SIGN, ItemId.POPLAR_SIGN);
     }
 
     private static <T extends BlockBehavior> BlockType<T> buildStandingSign(BlockId blockId, ItemId dropItemId) {
@@ -1111,6 +1125,7 @@ public final class BlockTypeInitializer {
         BlockTypes.SPRUCE_HANGING_SIGN = buildHangingSign(BlockId.SPRUCE_HANGING_SIGN);
         BlockTypes.WARPED_HANGING_SIGN = buildHangingSign(BlockId.WARPED_HANGING_SIGN);
         BlockTypes.PALE_OAK_HANGING_SIGN = buildHangingSign(BlockId.PALE_OAK_HANGING_SIGN);
+        BlockTypes.POPLAR_HANGING_SIGN = buildHangingSign(BlockId.POPLAR_HANGING_SIGN);
     }
 
     private static <T extends BlockBehavior> BlockType<T> buildHangingSign(BlockId blockId) {
@@ -1335,6 +1350,7 @@ public final class BlockTypeInitializer {
         BlockTypes.SPRUCE_TRAPDOOR = buildTrapdoor(BlockId.SPRUCE_TRAPDOOR);
         BlockTypes.WARPED_TRAPDOOR = buildTrapdoor(BlockId.WARPED_TRAPDOOR);
         BlockTypes.PALE_OAK_TRAPDOOR = buildTrapdoor(BlockId.PALE_OAK_TRAPDOOR);
+        BlockTypes.POPLAR_TRAPDOOR = buildTrapdoor(BlockId.POPLAR_TRAPDOOR);
 
         BlockTypes.IRON_TRAPDOOR = AllayBlockType.builder(BlockTrapdoorBehaviorImpl.class)
                 .vanillaBlock(BlockId.IRON_TRAPDOOR)
@@ -1922,6 +1938,7 @@ public final class BlockTypeInitializer {
         BlockTypes.JUNGLE_FENCE_GATE = buildFenceGate(BlockId.JUNGLE_FENCE_GATE);
         BlockTypes.MANGROVE_FENCE_GATE = buildFenceGate(BlockId.MANGROVE_FENCE_GATE);
         BlockTypes.PALE_OAK_FENCE_GATE = buildFenceGate(BlockId.PALE_OAK_FENCE_GATE);
+        BlockTypes.POPLAR_FENCE_GATE = buildFenceGate(BlockId.POPLAR_FENCE_GATE);
         BlockTypes.SPRUCE_FENCE_GATE = buildFenceGate(BlockId.SPRUCE_FENCE_GATE);
         BlockTypes.WARPED_FENCE_GATE = buildFenceGate(BlockId.WARPED_FENCE_GATE);
     }
@@ -1989,6 +2006,14 @@ public final class BlockTypeInitializer {
                 .vanillaBlock(BlockId.BED)
                 .bindBlockEntity(BlockEntityTypes.BED)
                 .setProperties(BlockPropertyTypes.HEAD_PIECE_BIT, BlockPropertyTypes.OCCUPIED_BIT, BlockPropertyTypes.DIRECTION_4)
+                .setBaseComponentSupplier(BlockBedBaseComponentImpl::new)
+                .addComponent(new BlockBedRespawnPointComponentImpl())
+                .build();
+        BlockTypes.STRAW_BED = AllayBlockType
+                .builder(BlockBedBehaviorImpl.class)
+                .vanillaBlock(BlockId.STRAW_BED)
+                .bindBlockEntity(BlockEntityTypes.BED)
+                .setProperties(BlockPropertyTypes.HEAD_PIECE_BIT, BlockPropertyTypes.OCCUPIED_BIT, BlockPropertyTypes.MINECRAFT_CARDINAL_DIRECTION)
                 .setBaseComponentSupplier(BlockBedBaseComponentImpl::new)
                 .addComponent(new BlockBedRespawnPointComponentImpl())
                 .build();
@@ -2290,6 +2315,7 @@ public final class BlockTypeInitializer {
         BlockTypes.SPRUCE_PRESSURE_PLATE = buildPressurePlate(BlockId.SPRUCE_PRESSURE_PLATE, BlockPressurePlateBaseComponentImpl::new);
         BlockTypes.WARPED_PRESSURE_PLATE = buildPressurePlate(BlockId.WARPED_PRESSURE_PLATE, BlockPressurePlateBaseComponentImpl::new);
         BlockTypes.PALE_OAK_PRESSURE_PLATE = buildPressurePlate(BlockId.PALE_OAK_PRESSURE_PLATE, BlockPressurePlateBaseComponentImpl::new);
+        BlockTypes.POPLAR_PRESSURE_PLATE = buildPressurePlate(BlockId.POPLAR_PRESSURE_PLATE, BlockPressurePlateBaseComponentImpl::new);
         BlockTypes.POLISHED_BLACKSTONE_PRESSURE_PLATE = buildPressurePlate(BlockId.POLISHED_BLACKSTONE_PRESSURE_PLATE, BlockPressurePlateBaseComponentImpl::new);
 
         // Weighted pressure plates
@@ -2467,6 +2493,12 @@ public final class BlockTypeInitializer {
                 .vanillaBlock(BlockId.PALE_OAK_SAPLING)
                 .setProperties(BlockPropertyTypes.AGE_BIT)
                 .setBaseComponentSupplier(blockType -> new BlockSaplingBaseComponentImpl(blockType, DoubleTrunkTreeFeature.PALE_OAK_IDENTIFIER, null, null))
+                .build();
+        BlockTypes.POPLAR_SAPLING = AllayBlockType
+                .builder(BlockSaplingBehaviorImpl.class)
+                .vanillaBlock(BlockId.POPLAR_SAPLING)
+                .setProperties(BlockPropertyTypes.AGE_BIT)
+                .setBaseComponentSupplier(blockType -> new BlockSaplingBaseComponentImpl(blockType, null, null, null))
                 .build();
         BlockTypes.MANGROVE_PROPAGULE = AllayBlockType
                 .builder(BlockSaplingBehaviorImpl.class)
@@ -2914,6 +2946,7 @@ public final class BlockTypeInitializer {
         BlockTypes.JUNGLE_SHELF = buildShelf(BlockId.JUNGLE_SHELF);
         BlockTypes.MANGROVE_SHELF = buildShelf(BlockId.MANGROVE_SHELF);
         BlockTypes.PALE_OAK_SHELF = buildShelf(BlockId.PALE_OAK_SHELF);
+        BlockTypes.POPLAR_SHELF = buildShelf(BlockId.POPLAR_SHELF);
         BlockTypes.SPRUCE_SHELF = buildShelf(BlockId.SPRUCE_SHELF);
         BlockTypes.WARPED_SHELF = buildShelf(BlockId.WARPED_SHELF);
     }
