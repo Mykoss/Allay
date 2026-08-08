@@ -99,6 +99,7 @@ import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.cloudburstmc.protocol.bedrock.data.command.*;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataMap;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerSlotType;
+import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
@@ -628,7 +629,24 @@ public class AllayPlayer implements Player {
     }
 
     protected void viewSlotWithSpecificContainerId(Container container, int slot, int containerId) {
-        sendPacket(getProtocol().getEncoder().encodeContainerSlot(container, slot, containerId));
+        var packet = getProtocol().getEncoder().encodeContainerSlot(container, slot, containerId);
+
+        // Protocol 2168 clients can retain the previous Stack Network ID when a slot changes.
+        // Clear the slot first, then send the authoritative stack with its real network ID.
+        if (getProtocol().getProtocolVersion() == 2168) {
+            var item = packet.getItem();
+            if (item != null && !item.isNull() && item.isUsingNetId()) {
+                var clearPacket = new InventorySlotPacket();
+                clearPacket.setContainerId(packet.getContainerId());
+                clearPacket.setSlot(packet.getSlot());
+                clearPacket.setContainerNameData(null);
+                clearPacket.setStorageItem(null);
+                clearPacket.setItem(ItemData.AIR);
+                sendPacket(clearPacket);
+            }
+        }
+
+        sendPacket(packet);
     }
 
     @Override
