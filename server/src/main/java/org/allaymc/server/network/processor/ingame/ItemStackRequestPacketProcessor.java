@@ -95,7 +95,7 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
 
                 if (!response.ok()) {
                     ItemStackResponse errorResponse =
-                            new ItemStackResponse(ItemStackResponseStatus.ERROR, request.requestId(), null);
+                            new ItemStackResponse(ItemStackResponseStatus.ERROR, request.requestId(), Collections.emptyList());
                     encodedResponses.add(errorResponse);
                     log.warn("[DEBUG-STACK-REQUEST]   request id={} -> ERROR response={}",
                             request.requestId(), errorResponse);
