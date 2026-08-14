@@ -8,6 +8,8 @@ on:
       - gradle/libs.versions.toml
       - gradle.properties
       - build.gradle.kts
+      - settings.gradle.kts
+      - protocol-local
       - api/**
       - server/**
       - data/**
@@ -17,6 +19,8 @@ on:
       - gradle/libs.versions.toml
       - gradle.properties
       - build.gradle.kts
+      - settings.gradle.kts
+      - protocol-local
       - api/**
       - server/**
       - data/**
@@ -28,6 +32,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v5
