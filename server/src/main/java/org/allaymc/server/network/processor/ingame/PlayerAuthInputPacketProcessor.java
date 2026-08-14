@@ -390,23 +390,6 @@ public class PlayerAuthInputPacketProcessor extends PacketProcessor<PlayerAuthIn
 
     @Override
     public PacketSignal handleAsync(Player player, PlayerAuthInputPacket packet, long receiveTime) {
-        // >>> DEBUG: temporal, quitar una vez resuelto el bug de 1.26.40
-        if (!packet.getPlayerActions().isEmpty() || packet.getItemUseTransaction() != null) {
-            try {
-                log.info(
-                        "[DEBUG-AUTHINPUT] tick={} pos={} rot={} itemUseTx={} blockActions={}",
-                        packet.getTick(),
-                        packet.getPosition(),
-                        packet.getRotation(),
-                        packet.getItemUseTransaction(),
-                        packet.getPlayerActions()
-                );
-            } catch (Throwable t) {
-                log.error("[DEBUG-AUTHINPUT] Exception while logging/printing packet contents - this itself points at corrupted data", t);
-            }
-        }
-        // <<< DEBUG
-
         if (notReadyForInput(player)) {
             return PacketSignal.HANDLED;
         }

@@ -22,6 +22,15 @@ Dependency versions live in `gradle/libs.versions.toml`. CI workflows are in `.g
 
 Requires **Java 21** and the included Gradle wrapper.
 
+Initialize the pinned protocol revision before building. Do not use
+`--remote`: that option ignores the tested gitlink and can pull an
+incompatible protocol serializer.
+
+```bash
+git submodule sync --recursive
+git submodule update --init --recursive
+```
+
 ```bash
 # Compile all modules, run tests, produce artifacts
 ./gradlew build
