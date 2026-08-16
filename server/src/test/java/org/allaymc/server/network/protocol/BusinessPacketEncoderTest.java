@@ -11,6 +11,7 @@ import org.cloudburstmc.protocol.bedrock.packet.RespawnPacket;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -60,7 +61,7 @@ class BusinessPacketEncoderTest {
         assertEquals(ContainerType.CONTAINER, firstClose.getType());
         assertFalse(firstClose.isServerInitiated());
 
-        var response = new ItemStackResponse(ItemStackResponseStatus.ERROR, 7, null);
+        var response = new ItemStackResponse(ItemStackResponseStatus.ERROR, 7, Collections.emptyList());
         var responses = new ArrayList<>(List.of(response));
         var firstResponse = encoder.encodeItemStackResponse(responses);
         var secondResponse = encoder.encodeItemStackResponse(responses);

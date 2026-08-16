@@ -24,25 +24,20 @@ import java.util.*;
 
 import static org.allaymc.server.container.processor.CraftRecipeOptionalActionProcessor.FILTER_STRINGS_DATA_KEY;
 
-/**
- * TEMP DEBUG VERSION.
- * Remove the [DEBUG-STACK-REQUEST] logging once protocol 2168 inventory is fixed.
- */
 @Slf4j
 public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRequestPacket> {
     protected final ContainerActionProcessorHolder processorHolder = new ContainerActionProcessorHolder();
 
     @Override
     public void handleSync(Player player, ItemStackRequestPacket packet, long receiveTime) {
-        log.warn("[DEBUG-STACK-REQUEST] ========================================");
-        log.warn("[DEBUG-STACK-REQUEST] player={} receiveTime={} requestCount={}",
+        log.debug("[DEBUG-STACK-REQUEST] player={} receiveTime={} requestCount={}",
                 player.getOriginName(), receiveTime, packet.getRequests().size());
 
         List<ItemStackResponse> encodedResponses = new LinkedList<>();
 
         label:
         for (var request : packet.getRequests()) {
-            log.warn("[DEBUG-STACK-REQUEST] REQUEST id={} actions={} filters={} origin={}",
+            log.debug("[DEBUG-STACK-REQUEST] REQUEST id={} actions={} filters={} origin={}",
                     request.requestId(),
                     request.actions().length,
                     Arrays.toString(request.filterStrings()),
@@ -58,7 +53,7 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
             for (int index = 0; index < actions.length; index++) {
                 var action = actions[index];
 
-                log.warn("[DEBUG-STACK-REQUEST]   action[{}] type={} class={} data={}",
+                log.debug("[DEBUG-STACK-REQUEST]   action[{}] type={} class={} data={}",
                         index,
                         action.getType(),
                         action.getClass().getName(),
@@ -70,8 +65,8 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
 
                 ContainerActionProcessor<ItemStackRequestAction> processor = processorHolder.getProcessor(action.getType());
                 if (processor == null) {
-                    log.warn("[DEBUG-STACK-REQUEST]   NO PROCESSOR for action[{}] type={}", index, action.getType());
-                    log.warn("Not found handler for action type {}", action.getType());
+                    log.warn("No handler for item stack action type {} (request id={}, action[{}])",
+                            action.getType(), request.requestId(), index);
                     continue;
                 }
 
@@ -79,14 +74,14 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
                 try {
                     response = processor.handle(action, player, index, actions, dataPool);
                 } catch (RuntimeException | Error throwable) {
-                    log.error("[DEBUG-STACK-REQUEST]   PROCESSOR EXCEPTION action[{}] type={} data={}",
-                            index, action.getType(), action, throwable);
+                    log.error("Item stack action processor threw for action[{}] type={} request id={}: data={}",
+                            index, action.getType(), request.requestId(), action, throwable);
                     throw throwable;
                 }
 
-                log.warn("[DEBUG-STACK-REQUEST]   action[{}] processor={} response={}",
+                log.debug("[DEBUG-STACK-REQUEST]   action[{}] processor={} response={}",
                         index,
-                        processor.getClass().getName(),
+                        processor.getClass().getSimpleName(),
                         response);
 
                 if (response == null) {
@@ -97,8 +92,8 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
                     ItemStackResponse errorResponse =
                             new ItemStackResponse(ItemStackResponseStatus.ERROR, request.requestId(), Collections.emptyList());
                     encodedResponses.add(errorResponse);
-                    log.warn("[DEBUG-STACK-REQUEST]   request id={} -> ERROR response={}",
-                            request.requestId(), errorResponse);
+                    log.warn("Item stack request id={} rejected by action[{}] type={} (player={})",
+                            request.requestId(), index, action.getType(), player.getOriginName());
                     continue label;
                 }
 
@@ -110,15 +105,15 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
             }
 
             ItemStackResponse encoded = encodeActionResponses(responses, request.requestId());
+            log.debug("[DEBUG-STACK-REQUEST] request id={} -> result={} containers={}",
+                    request.requestId(), encoded.result(), encoded.containers().size());
             encodedResponses.add(encoded);
-            log.warn("[DEBUG-STACK-REQUEST] request id={} FINAL RESPONSE={}", request.requestId(), encoded);
         }
 
         var allayPlayer = (AllayPlayer) player;
         var responsePacket = allayPlayer.getProtocol().getEncoder().encodeItemStackResponse(encodedResponses);
 
-        log.warn("[DEBUG-STACK-REQUEST] OUTGOING ItemStackResponsePacket={}", responsePacket);
-        log.warn("[DEBUG-STACK-REQUEST] ========================================");
+        log.debug("[DEBUG-STACK-REQUEST] sending ItemStackResponsePacket entries={}", responsePacket.getEntries().size());
 
         allayPlayer.sendPacket(responsePacket);
     }
@@ -127,11 +122,10 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
         Map<ContainerSlotType, Int2ObjectMap<ItemStackResponseSlot>> changedContainers = new HashMap<>();
 
         responses.forEach(response -> response.containers().forEach(container -> {
-            log.warn("[DEBUG-STACK-REQUEST]     changed container={} fullName={} items={}",
-                    container.container(), container.containerName(), container.items());
+            log.debug("[DEBUG-STACK-REQUEST]     changed container={} items={}",
+                    container.container(), container.items());
 
             for (var changedSlot : container.items()) {
-                log.warn("[DEBUG-STACK-REQUEST]       changed slot={}", changedSlot);
                 var changedSlots = changedContainers.computeIfAbsent(
                         container.container(),
                         $ -> new Int2ObjectOpenHashMap<>()
