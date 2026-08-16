@@ -12,6 +12,7 @@ import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtType;
 
 import java.util.EnumSet;
+import java.util.Objects;
 
 import static org.allaymc.api.utils.AllayNBTUtils.writeVector2f;
 import static org.allaymc.api.utils.AllayNBTUtils.writeVector3f;
@@ -53,7 +54,10 @@ public class PlayerData {
 
         return PlayerData.builder()
                 .nbt(entity.saveNBT())
-                .world(entity.getWorld().getWorldData().getDisplayName())
+                // WorldPool is keyed by World#getName(), not by WorldData#getDisplayName().
+                // Persisting the display name makes the next login look like the world no longer exists,
+                // which causes AllayPlayer to replace only Pos with the global spawn point.
+                .world(entity.getWorld().getName())
                 .dimension(entity.getDimension().getDimensionType().getIdentifier().toString())
                 .abilities(player.getAbilities().isEmpty() ? EnumSet.noneOf(PlayerAbility.class) : EnumSet.copyOf(player.getAbilities()))
                 .build();
@@ -70,7 +74,7 @@ public class PlayerData {
         var builder = NbtMap.builder();
         writeVector3f(builder, "Pos", globalSpawnPoint.x(), globalSpawnPoint.y(), globalSpawnPoint.z());
         writeVector2f(builder, "Rotation", 0f, 0f);
-        var worldName = globalSpawnPoint.dimension().getWorld().getWorldData().getDisplayName();
+        var worldName = globalSpawnPoint.dimension().getWorld().getName();
         var dimensionId = globalSpawnPoint.dimension().getDimensionType().getIdentifier().toString();
         return builder()
                 .nbt(builder.build())
@@ -88,7 +92,7 @@ public class PlayerData {
     public static PlayerData fromNBT(NbtMap nbt) {
         var builder = builder();
         builder.nbt(nbt.getCompound(TAG_NBT))
-                .world(nbt.getString(TAG_WORLD))
+                .world(normalizeStoredWorldName(nbt.getString(TAG_WORLD)))
                 .dimension(readDimension(nbt));
 
         if (nbt.containsKey(TAG_ABILITIES)) {
@@ -104,6 +108,40 @@ public class PlayerData {
         }
 
         return builder.build();
+    }
+
+    /**
+     * Resolves player data written by older Allay builds which persisted the world's display name instead of
+     * the internal world name. WorldPool#getWorld(String) only accepts the internal name, so leaving the old
+     * value untouched makes AllayPlayer treat an existing world as missing and replace the player's Pos with
+     * the global spawn point. A unique display-name match is safe to migrate in memory; the next normal save
+     * writes the canonical internal name.
+     */
+    protected static String normalizeStoredWorldName(String storedWorldName) {
+        var worldPool = Server.getInstance().getWorldPool();
+        if (worldPool.getWorld(storedWorldName) != null) {
+            return storedWorldName;
+        }
+
+        String resolvedWorldName = null;
+        for (var world : worldPool.getWorlds().values()) {
+            if (!Objects.equals(world.getWorldData().getDisplayName(), storedWorldName)) {
+                continue;
+            }
+
+            if (resolvedWorldName != null && !Objects.equals(resolvedWorldName, world.getName())) {
+                log.warn("Stored player world '{}' matches multiple world display names; keeping legacy reference", storedWorldName);
+                return storedWorldName;
+            }
+            resolvedWorldName = world.getName();
+        }
+
+        if (resolvedWorldName != null) {
+            log.debug("Resolved legacy player world display name '{}' to world '{}'", storedWorldName, resolvedWorldName);
+            return resolvedWorldName;
+        }
+
+        return storedWorldName;
     }
 
     /**
