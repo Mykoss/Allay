@@ -53,11 +53,8 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
             for (int index = 0; index < actions.length; index++) {
                 var action = actions[index];
 
-                log.debug("[DEBUG-STACK-REQUEST]   action[{}] type={} class={} data={}",
-                        index,
-                        action.getType(),
-                        action.getClass().getName(),
-                        action);
+                log.debug("[DEBUG-STACK-REQUEST]   action[{}] type={} data={}",
+                        index, action.getType(), action);
 
                 if (action.getType() == ItemStackRequestActionType.CRAFT_RESULTS_DEPRECATED) {
                     noResponseForDestroyAction = true;
