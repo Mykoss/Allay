@@ -1,7 +1,6 @@
 package org.allaymc.server.network.processor.ingame;
 
 import org.allaymc.api.container.ContainerTypes;
-import org.allaymc.api.entity.interfaces.EntityNpc;
 import org.allaymc.api.eventbus.event.player.PlayerInteractEntityEvent;
 import org.allaymc.api.player.Player;
 import org.allaymc.server.network.NetworkHelper;
@@ -26,7 +25,7 @@ public class InteractPacketProcessor extends PacketProcessor<InteractPacket> {
 
         var entity = player.getControlledEntity();
         var target = entity.getDimension().getEntityManager().getEntity(packet.getRuntimeEntityId());
-        if (!(target instanceof EntityNpc) || !entity.canReach(target.getLocation())) {
+        if (target == null || !entity.canReach(target.getLocation())) {
             return;
         }
 
