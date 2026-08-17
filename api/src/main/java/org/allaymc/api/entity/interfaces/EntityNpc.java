@@ -1,7 +1,10 @@
 package org.allaymc.api.entity.interfaces;
 
-import org.allaymc.api.entity.Entity;
-
-public interface EntityNpc extends Entity {
-
+/**
+ * Represents the vanilla NPC entity.
+ * <p>
+ * NPCs expose the normal living-entity state (including health) to the client,
+ * but vanilla NPCs reject damage.
+ */
+public interface EntityNpc extends EntityLiving {
 }
