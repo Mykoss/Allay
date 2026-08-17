@@ -2,7 +2,7 @@ name: Allay
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "main" ]
     paths:
       - .github/workflows/gradle.yml
       - gradle/libs.versions.toml
