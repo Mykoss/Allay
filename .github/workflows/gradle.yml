@@ -38,6 +38,17 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Record Fork Run ID
+        if: github.event_name == 'push' && github.repository == 'Mykoss/Allay' && contains(github.event.head_commit.message, '[publish-jar]')
+        run: |
+          mkdir -p .ci
+          printf 'commit=%s\nrun_id=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" > .ci/latest-run.txt
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .ci/latest-run.txt
+          git commit -m "ci: record workflow run $GITHUB_RUN_ID"
+          git push origin HEAD:master
+
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
@@ -86,20 +97,6 @@ jobs:
         with:
           name: allay-server
           path: ${{ steps.vars.outputs.shaded_jar_path }}
-
-      - name: Record Fork Build Artifact
-        if: success() && github.event_name == 'push' && github.repository == 'Mykoss/Allay' && contains(github.event.head_commit.message, '[publish-jar]')
-        env:
-          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
-          JAR_NAME: ${{ steps.vars.outputs.shaded_jar_name }}
-        run: |
-          mkdir -p .ci
-          printf 'commit=%s\nrun_id=%s\nartifact_id=%s\njar_name=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$ARTIFACT_ID" "$JAR_NAME" > .ci/latest-build.txt
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .ci/latest-build.txt
-          git commit -m "ci: record build artifact for $GITHUB_SHA"
-          git push origin HEAD:master
 
       - name: Publish Fork Build Release
         uses: softprops/action-gh-release@v2
