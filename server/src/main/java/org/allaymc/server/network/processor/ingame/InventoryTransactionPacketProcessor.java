@@ -7,6 +7,7 @@ import org.allaymc.api.block.dto.PlayerInteractInfo;
 import org.allaymc.api.container.ContainerTypes;
 import org.allaymc.api.entity.component.EntityLivingComponent;
 import org.allaymc.api.entity.damage.DamageContainer;
+import org.allaymc.api.entity.interfaces.EntityNpc;
 import org.allaymc.api.entity.interfaces.EntityPlayer;
 import org.allaymc.api.eventbus.event.player.*;
 import org.allaymc.api.item.ItemStack;
@@ -202,8 +203,14 @@ public class InventoryTransactionPacketProcessor extends PacketProcessor<Invento
                         }
                     }
                     case ITEM_USE_ON_ENTITY_ATTACK -> {
-                        // Doesn't have damage component, can't attack
+                        // NPCs do not have a living/damage component. Bedrock can locally remove the
+                        // NPC after the attack transaction, so re-send it to the attacking viewer to
+                        // keep the client in sync while preserving NPC invulnerability.
                         if (!(target instanceof EntityLivingComponent damageable)) {
+                            if (target instanceof EntityNpc) {
+                                target.despawnFrom(player);
+                                target.spawnTo(player);
+                            }
                             return;
                         }
                         if (target instanceof EntityPlayer) {
