@@ -29,6 +29,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -82,6 +84,15 @@ jobs:
         with:
           name: allay-server
           path: ${{ steps.vars.outputs.shaded_jar_path }}
+
+      - name: Publish Fork Build Release
+        uses: softprops/action-gh-release@v2
+        if: success() && github.event_name == 'push' && github.repository == 'Mykoss/Allay' && contains(github.event.head_commit.message, '[publish-jar]')
+        with:
+          tag_name: build-${{ github.sha }}
+          name: Allay build ${{ github.sha }}
+          prerelease: true
+          files: ${{ steps.vars.outputs.shaded_jar_path }}
 
       - name: Publish to Maven Central
         if: success() && github.event_name == 'push' && github.repository == 'AllayMC/Allay' && contains(github.ref_name, 'master')
