@@ -43,3 +43,5 @@ jobs:
         with:
           name: allay-server
           path: ${{ steps.jar.outputs.path }}
+
+# CI-only workflow for producing the requested JAR artifact.
