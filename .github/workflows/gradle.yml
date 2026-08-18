@@ -54,18 +54,18 @@ jobs:
           build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
           build-scan-terms-of-use-agree: "yes"
 
-      - name: Build
+      - name: Build Shaded Server Jar
         run: |
           chmod +x gradlew
-          ./gradlew build
+          ./gradlew :server:shadowJar
 
       - name: Generate Coverage Reports
-        if: success()
+        if: success() && github.repository == 'AllayMC/Allay'
         run: ./gradlew jacocoTestReport
 
       - name: Upload Coverage Reports to Codecov
         uses: codecov/codecov-action@v7.0.0
-        if: success()
+        if: success() && github.repository == 'AllayMC/Allay'
         with:
           directory: .jacoco/test/
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -75,6 +75,7 @@ jobs:
         run: |
           SHADED_JAR_PATH=$(find server/build/libs -name "allay-server-*-shaded.jar" -print -quit)
           SHADED_JAR_NAME=$(basename "$SHADED_JAR_PATH")
+          test -n "$SHADED_JAR_PATH"
           echo "shaded_jar_path=$SHADED_JAR_PATH" >> $GITHUB_OUTPUT
           echo "shaded_jar_name=$SHADED_JAR_NAME" >> $GITHUB_OUTPUT
 
