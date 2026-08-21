@@ -59,8 +59,8 @@ public final class SkinConvertor {
                 .skinData(serializedSkinData)
                 .animations(serializedAnimations)
                 .capeData(serializedCapeData)
-                .geometryData(skin.skinGeometry())
-                .geometryDataEngineVersion(skin.geometryDataEngineVersion())
+                .geometryData(sanitizeGeometryData(skin.skinGeometry()))
+                .geometryDataEngineVersion(orDefault(skin.geometryDataEngineVersion(), "0.0.0"))
                 .animationData(skin.animationData() == null ? "" : skin.animationData())
                 .premium(skin.premiumSkin())
                 .persona(skin.personaSkin())
@@ -145,12 +145,22 @@ public final class SkinConvertor {
         );
     }
 
+    private static String sanitizeGeometryData(String geometryData) {
+        if (geometryData == null) {
+            return "{}";
+        }
+        var trimmed = geometryData.trim();
+        return trimmed.startsWith("{") ? trimmed : "{}";
+    }
+
+    private static String orDefault(String value, String defaultValue) {
+        return value == null || value.isEmpty() ? defaultValue : value;
+    }
+
     private static AnimationData convertAnimationToSerialized(Skin.AnimationData data) {
         return new AnimationData(
                 ImageData.of(
-                        data.imageData().width(),
-                        data.imageData().height(),
-                        data.imageData().data().clone()
+                        data.imageData().width(), data.imageData().height(), data.imageData().data().clone()
                 ),
                 convertAnimationType(data.animationType()),
                 data.frameCount(),
@@ -161,9 +171,7 @@ public final class SkinConvertor {
     private static Skin.AnimationData convertAnimationFromSerialized(AnimationData data) {
         return new Skin.AnimationData(
                 new Skin.ImageData(
-                        data.image().getWidth(),
-                        data.image().getHeight(),
-                        data.image().getImage().clone()
+                        data.image().getWidth(), data.image().getHeight(), data.image().getImage().clone()
                 ),
                 convertAnimationType(data.textureType()),
                 data.frames(),
