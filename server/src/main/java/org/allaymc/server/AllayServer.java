@@ -169,8 +169,11 @@ public final class AllayServer implements Server {
         var ctx = (LoggerContext) LogManager.getContext(false);
         var log4jConfig = ctx.getConfiguration();
         var loggerConfig = log4jConfig.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
-        if (SETTINGS.genericSettings().debug() && Level.DEBUG.isLessSpecificThan(loggerConfig.getLevel())) {
-            loggerConfig.setLevel(Level.DEBUG);
+        var requestedLogLevel = SETTINGS.networkSettings().debugPackets()
+                ? Level.TRACE
+                : SETTINGS.genericSettings().debug() ? Level.DEBUG : null;
+        if (requestedLogLevel != null && requestedLogLevel.isLessSpecificThan(loggerConfig.getLevel())) {
+            loggerConfig.setLevel(requestedLogLevel);
             ctx.updateLoggers();
         }
 
