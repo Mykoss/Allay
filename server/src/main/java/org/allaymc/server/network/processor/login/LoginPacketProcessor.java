@@ -6,8 +6,10 @@ import org.allaymc.api.player.Player;
 import org.allaymc.api.server.Server;
 import org.allaymc.server.AllayServer;
 import org.allaymc.server.network.processor.ingame.ILoginPacketProcessor;
+import org.allaymc.server.network.protocol.ClientVariant;
 import org.allaymc.server.player.AllayLoginData;
 import org.allaymc.server.player.AllayPlayer;
+import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2168;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketType;
 import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ServerToClientHandshakePacket;
@@ -29,6 +31,12 @@ public class LoginPacketProcessor extends ILoginPacketProcessor<LoginPacket> {
         var loginData = decodeLoginData(packet);
         if (loginData == null) {
             log.warn("Failed to decode login packet received from {}. The client will be disconnected", player.getSocketAddress());
+            player.disconnect();
+            return;
+        }
+
+        if (!selectV2168Codec(allayPlayer, loginData.getGameVersion())) {
+            log.warn("Failed to configure the v2168 codec for client {}", player.getSocketAddress());
             player.disconnect();
             return;
         }
@@ -106,6 +114,27 @@ public class LoginPacketProcessor extends ILoginPacketProcessor<LoginPacket> {
      */
     protected AllayLoginData decodeLoginData(LoginPacket packet) {
         return AllayLoginData.decode(packet, false);
+    }
+
+    boolean selectV2168Codec(AllayPlayer player, String minecraftVersion) {
+        var protocol = player.getProtocol();
+        if (protocol.getVariant() != ClientVariant.INTERNATIONAL
+                || protocol.getProtocolVersion() != Bedrock_v2168.CODEC.getProtocolVersion()
+                || !isV2168BaseVersion(minecraftVersion)) {
+            return true;
+        }
+
+        var protocolSession = player.getProtocolSession();
+        if (protocolSession == null || !player.getSession().isConnected()) {
+            return false;
+        }
+        protocolSession.switchCodec(Bedrock_v2168.CODEC);
+        return true;
+    }
+
+    private static boolean isV2168BaseVersion(String minecraftVersion) {
+        var baseVersion = Bedrock_v2168.CODEC.getMinecraftVersion();
+        return minecraftVersion != null && (minecraftVersion.equals(baseVersion) || minecraftVersion.startsWith(baseVersion + "."));
     }
 
     /**

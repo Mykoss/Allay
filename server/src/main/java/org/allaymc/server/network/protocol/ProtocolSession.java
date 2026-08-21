@@ -11,6 +11,7 @@ import org.allaymc.server.network.processor.PacketProcessorHolder;
 import org.allaymc.server.player.AllayPlayer;
 import org.allaymc.server.world.AllayWorld;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
+import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.data.PacketRecipient;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.PacketSignal;
@@ -64,6 +65,38 @@ public final class ProtocolSession {
             throw new IllegalStateException("Protocol codec is already installed");
         }
 
+        applyCodec(protocol.getCodec());
+        codecInstalled = true;
+    }
+
+    /**
+     * Replaces the transport codec before login completes.
+     *
+     * <p>The replacement must use the negotiated wire protocol number. Packet processors and
+     * definition registries stay tied to the negotiated protocol.</p>
+     *
+     * @param codec the replacement codec
+     * @throws IllegalArgumentException if the codec uses another wire protocol number
+     * @throws IllegalStateException if no codec is installed or login has already advanced
+     */
+    public synchronized void switchCodec(BedrockCodec codec) {
+        codec = Objects.requireNonNull(codec, "codec");
+        if (!codecInstalled) {
+            throw new IllegalStateException("Protocol codec must be installed before switching");
+        }
+        if (codec.getProtocolVersion() != protocol.getProtocolVersion()) {
+            throw new IllegalArgumentException("Replacement codec must use the negotiated protocol version");
+        }
+        if (processorHolder.getClientState() != ClientState.CONNECTED) {
+            throw new IllegalStateException("Protocol codec can only change while the client is connected");
+        }
+        if (session.getCodec() == codec) {
+            return;
+        }
+        applyCodec(codec);
+    }
+
+    private void applyCodec(BedrockCodec codec) {
         var previousCodec = session.getCodec();
         if (previousCodec == null) {
             throw new IllegalStateException("Session must have a bootstrap codec before protocol installation");
@@ -72,11 +105,10 @@ public final class ProtocolSession {
         var previousItemDefinitions = previousHelper.getItemDefinitions();
         var previousBlockDefinitions = previousHelper.getBlockDefinitions();
         try {
-            session.setCodec(protocol.getCodec());
+            session.setCodec(codec);
             var helper = session.getPeer().getCodecHelper();
             helper.setItemDefinitions(protocol.getItemDefinitionRegistry());
             helper.setBlockDefinitions(protocol.getBlockDefinitionRegistry());
-            codecInstalled = true;
         } catch (RuntimeException exception) {
             try {
                 session.setCodec(previousCodec);
