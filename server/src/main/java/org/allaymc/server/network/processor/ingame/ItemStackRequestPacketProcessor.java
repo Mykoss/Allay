@@ -47,6 +47,20 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
             var noResponseForDestroyAction = false;
             var actions = request.actions();
 
+            for (int index = 0; index < actions.length; index++) {
+                var action = actions[index];
+                if (processorHolder.getProcessor(action.getType()) == null) {
+                    log.warn("Rejecting unsupported item stack action type {} (request id={}, action[{}])",
+                            action.getType(), request.requestId(), index);
+                    encodedResponses.add(new ItemStackResponse(
+                            ItemStackResponseStatus.INVALID_REQUEST_ACTION_TYPE,
+                            request.requestId(),
+                            Collections.emptyList()
+                    ));
+                    continue label;
+                }
+            }
+
             Map<String, Object> dataPool = new HashMap<>();
             dataPool.put(FILTER_STRINGS_DATA_KEY, request.filterStrings());
 
@@ -61,19 +75,18 @@ public class ItemStackRequestPacketProcessor extends PacketProcessor<ItemStackRe
                 }
 
                 ContainerActionProcessor<ItemStackRequestAction> processor = processorHolder.getProcessor(action.getType());
-                if (processor == null) {
-                    log.warn("No handler for item stack action type {} (request id={}, action[{}])",
-                            action.getType(), request.requestId(), index);
-                    continue;
-                }
-
                 ActionResponse response;
                 try {
                     response = processor.handle(action, player, index, actions, dataPool);
-                } catch (RuntimeException | Error throwable) {
-                    log.error("Item stack action processor threw for action[{}] type={} request id={}: data={}",
-                            index, action.getType(), request.requestId(), action, throwable);
-                    throw throwable;
+                } catch (RuntimeException exception) {
+                    log.error("Rejecting failed item stack action[{}] type={} request id={}: data={}",
+                            index, action.getType(), request.requestId(), action, exception);
+                    encodedResponses.add(new ItemStackResponse(
+                            ItemStackResponseStatus.ITEM_REQUEST_ACTION_HANDLER_COMMIT_FAILED,
+                            request.requestId(),
+                            Collections.emptyList()
+                    ));
+                    continue label;
                 }
 
                 log.debug("[DEBUG-STACK-REQUEST]   action[{}] processor={} response={}",

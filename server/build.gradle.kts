@@ -29,6 +29,8 @@ dependencies {
     api(libs.disruptor)
     api(libs.netty.epoll)
     api(libs.netty.kqueue)
+    runtimeOnly("io.netty:netty-transport-native-epoll:${libs.versions.netty.get()}:linux-x86_64")
+    runtimeOnly("io.netty:netty-transport-native-epoll:${libs.versions.netty.get()}:linux-aarch_64")
     api(libs.fastreflect)
     api(libs.oshi)
     api(libs.flatlaf)
