@@ -13,6 +13,8 @@ import org.allaymc.api.entity.type.EntityType;
 import org.allaymc.api.item.data.DiscType;
 import org.allaymc.api.math.location.Location3d;
 import org.allaymc.api.player.GameMode;
+import org.allaymc.api.player.LoginData;
+import org.allaymc.api.player.Player;
 import org.allaymc.api.player.PlayerData;
 import org.allaymc.api.player.Skin;
 import org.allaymc.api.primitiveshape.PrimitiveSphere;
@@ -36,6 +38,7 @@ import org.allaymc.server.world.dimension.DimensionId;
 import org.allaymc.testutils.AllayTestExtension;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.protocol.bedrock.data.GameType;
+import org.cloudburstmc.protocol.bedrock.data.BuildPlatform;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
@@ -410,6 +413,49 @@ class PacketEncoderCompatibilityTest {
         listSkin.getSkinData().getImage()[0] = 99;
         assertEquals(1, directSkin.getSkinData().getImage()[0]);
         assertEquals(1, repeatedSkin.getSkinData().getImage()[0]);
+    }
+
+    @Test
+    void windowsPersonaPlayersUseAnEmptyPlatformChatIdentifier() {
+        var protocol = protocol(ClientVariant.INTERNATIONAL, 2168);
+        var player = mock(Player.class);
+        var entity = mock(EntityPlayer.class);
+        var loginData = mock(LoginData.class);
+        var uniqueId = UUID.fromString("8feb36dc-99d0-38dd-b9f3-293130b47f12");
+        var personaSkin = networkSkin().toBuilder()
+                .skinId("persona-windows")
+                .skinData(new Skin.ImageData(256, 256, new byte[256 * 256 * 4]))
+                .personaSkin(true)
+                .skinColor("#ff7e5337")
+                .personaPieces(List.of(new Skin.PersonaPieces(
+                        "piece", "persona_skin", "2099de18-429a-465a-a49b-fc4710a17bb3", true, ""
+                )))
+                .pieceTintColors(List.of(new Skin.PersonaPieceTintColor(
+                        "persona_mouth", List.of("#0", "#0", "#ff45220e", "#0")
+                )))
+                .build();
+
+        when(player.getLoginData()).thenReturn(loginData);
+        when(player.getControlledEntity()).thenReturn(entity);
+        when(player.getOriginName()).thenReturn("ChispaMC");
+        when(entity.getUniqueId()).thenReturn(uniqueId);
+        when(loginData.getUuid()).thenReturn(uniqueId);
+        when(loginData.getXuid()).thenReturn("2535465713901384");
+        when(loginData.getSkin()).thenReturn(personaSkin);
+        when(loginData.getDeviceInfo()).thenReturn(new LoginData.DeviceInfo(
+                "HP Laptop 15-dy5xxx HP (Unknown)", "device", 1L,
+                LoginData.Device.WINDOWS_32, LoginData.UIProfile.CLASSIC
+        ));
+
+        var packet = protocol.getEncoder().encodePlayerList(List.of(player), true, true);
+        var entry = packet.getEntries().getFirst();
+
+        assertEquals("", entry.getPlatformChatId());
+        assertEquals(BuildPlatform.WIN32, entry.getBuildPlatform());
+        assertTrue(entry.getSkin().isPersona());
+        assertEquals(256, entry.getSkin().getSkinData().getWidth());
+        assertEquals(256, entry.getSkin().getSkinData().getHeight());
+        assertPacketEncodes(protocol, packet);
     }
 
     @Test
