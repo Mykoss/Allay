@@ -1,7 +1,7 @@
 package org.allaymc.server.world.manager;
 
 import com.google.common.collect.Sets;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongComparator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -170,7 +170,9 @@ public final class ChunkLoaderHolder {
             return;
         }
 
-        var chunkReadyToSend = new Long2ObjectOpenHashMap<Chunk>();
+        // Preserve the center-out order established by chunkSendingQueue. The async sender
+        // consumes values directly, so a hash-order map can send the spawn chunk too late.
+        var chunkReadyToSend = new Long2ObjectLinkedOpenHashMap<Chunk>();
         int sentChunkCount = 0;
         do {
             sentChunkCount++;

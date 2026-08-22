@@ -2329,7 +2329,8 @@ packet.setAction(action);
             entry.setEntityId(entity.getUniqueId().getLeastSignificantBits());
             entry.setName(player.getOriginName());
             entry.setXuid(player.getLoginData().getXuid());
-            entry.setPlatformChatId(player.getLoginData().getDeviceInfo().deviceName());
+            // The hardware model is not a platform chat identifier and must not be sent as one.
+            entry.setPlatformChatId("");
             entry.setBuildPlatform(BuildPlatform.from(player.getLoginData().getDeviceInfo().device().getId()));
             entry.setSkin(SkinConvertor.toSerializedSkin(player.getLoginData().getSkin()));
             entry.setTrustedSkin(trustSkins);
