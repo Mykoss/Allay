@@ -7,14 +7,18 @@ import org.allaymc.server.network.processor.PacketProcessorRegistry;
 import org.allaymc.server.network.protocol.Protocol;
 import org.allaymc.server.network.protocol.ProtocolData;
 import org.allaymc.testutils.AllayTestExtension;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
+import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
+import org.cloudburstmc.protocol.bedrock.packet.NetworkChunkPublisherUpdatePacket;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -39,6 +43,24 @@ class AllayPlayerProtocolLifecycleTest {
         player.sendPacketImmediately(null);
         player.sendPacketsImmediately(null);
         player.sendPacketsImmediately(List.of());
+    }
+
+    @Test
+    void chunkPublisherUpdatesAreOnlySentWhenCenterOrRadiusChanges() {
+        var player = new PublisherTestPlayer(mock(BedrockServerSession.class), mock(AllayNetworkInterface.class));
+
+        player.setPublisherUpdate(Vector3i.from(1, 2, 3), 128);
+        player.sendNetworkChunkPublisherUpdateIfNeeded();
+        player.sendNetworkChunkPublisherUpdateIfNeeded();
+        assertEquals(1, player.sentPackets.size());
+
+        player.setPublisherUpdate(Vector3i.from(1, 2, 3), 160);
+        player.sendNetworkChunkPublisherUpdateIfNeeded();
+        assertEquals(2, player.sentPackets.size());
+
+        player.setPublisherUpdate(Vector3i.from(4, 2, 3), 160);
+        player.sendNetworkChunkPublisherUpdateIfNeeded();
+        assertEquals(3, player.sentPackets.size());
     }
 
     @Test
@@ -116,6 +138,31 @@ class AllayPlayerProtocolLifecycleTest {
         when(session.getPeer()).thenReturn(peer);
         when(peer.getCodecHelper()).thenReturn(codecHelper);
         return protocol;
+    }
+
+    private static final class PublisherTestPlayer extends AllayPlayer {
+        private final List<BedrockPacket> sentPackets = new ArrayList<>();
+        private NetworkChunkPublisherUpdatePacket publisherUpdate;
+
+        private PublisherTestPlayer(BedrockServerSession session, AllayNetworkInterface sourceInterface) {
+            super(session, sourceInterface);
+        }
+
+        private void setPublisherUpdate(Vector3i position, int radius) {
+            publisherUpdate = new NetworkChunkPublisherUpdatePacket();
+            publisherUpdate.setPosition(position);
+            publisherUpdate.setRadius(radius);
+        }
+
+        @Override
+        protected NetworkChunkPublisherUpdatePacket createNetworkChunkPublisherUpdatePacket() {
+            return publisherUpdate;
+        }
+
+        @Override
+        public void sendPacket(BedrockPacket packet) {
+            sentPackets.add(packet);
+        }
     }
 
     private static final class TestPlayer extends AllayPlayer {
