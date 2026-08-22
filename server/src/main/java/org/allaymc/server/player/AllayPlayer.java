@@ -123,6 +123,8 @@ public class AllayPlayer implements Player {
 
     protected final PacketProcessorHolder bootstrapProcessorHolder;
     private final Object protocolLifecycleLock = new Object();
+    private final Object chunkPublisherLock = new Object();
+    private NetworkChunkPublisherUpdatePacket lastChunkPublisherUpdate;
     @Getter
     protected volatile ProtocolSession protocolSession;
     protected final AtomicInteger fullyJoinChunkThreshold;
@@ -442,7 +444,7 @@ public class AllayPlayer implements Player {
 
     @Override
     public void viewChunk(Chunk chunk) {
-        sendPacket(createNetworkChunkPublisherUpdatePacket());
+        sendNetworkChunkPublisherUpdateIfNeeded();
         sendPacket(createLevelChunkPacket(chunk));
         // This method will be called in a non-ticking thread if async chunk sending is enabled. Let's
         // send the entities in this chunk to the player next tick in the main thread: use forEachEntitiesInChunk()
@@ -450,6 +452,19 @@ public class AllayPlayer implements Player {
         this.controlledEntity.getDimension().getEntityManager().forEachEntitiesInChunk(chunk.getX(), chunk.getZ(), entity -> entity.spawnTo(this));
         if (fullyJoinChunkThreshold.get() > 0 && fullyJoinChunkThreshold.decrementAndGet() == 0) {
             onFullyJoin();
+        }
+    }
+
+    protected void sendNetworkChunkPublisherUpdateIfNeeded() {
+        var update = createNetworkChunkPublisherUpdatePacket();
+        synchronized (chunkPublisherLock) {
+            if (lastChunkPublisherUpdate != null &&
+                lastChunkPublisherUpdate.getRadius() == update.getRadius() &&
+                Objects.equals(lastChunkPublisherUpdate.getPosition(), update.getPosition())) {
+                return;
+            }
+            sendPacket(update);
+            lastChunkPublisherUpdate = update;
         }
     }
 
@@ -1234,6 +1249,9 @@ public class AllayPlayer implements Player {
 
     @Override
     public void beginDimensionChange(DimensionType targetDimType, double x, double y, double z) {
+        synchronized (chunkPublisherLock) {
+            lastChunkPublisherUpdate = null;
+        }
         this.changingDimension = true;
         sendPacket(getProtocol().getEncoder().encodeDimensionChange(targetDimType, x, y, z));
     }
@@ -2053,9 +2071,6 @@ public class AllayPlayer implements Player {
         // the chunks will be ignored by the client, and the client will be unable to join the server
         startGame(dimension.getWorld(), playerData, dimension);
 
-        dimension.addPlayer(this);
-        playerManager.addPlayer(this);
-
         sendPacket(encoder.encodeItemRegistry());
         sendPacket(encoder.encodeCreativeContent());
         sendPacket(encoder.encodeAvailableEntityIdentifiers());
@@ -2063,6 +2078,9 @@ public class AllayPlayer implements Player {
         sendPacket(encoder.encodeBiomeDefinitions());
         sendPacket(encoder.encodeCraftingData());
         sendPacket(encoder.encodeTrimData());
+
+        dimension.addPlayer(this);
+        playerManager.addPlayer(this);
     }
 
     /**
