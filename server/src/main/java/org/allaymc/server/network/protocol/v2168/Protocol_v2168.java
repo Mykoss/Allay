@@ -5,11 +5,11 @@ import org.allaymc.server.network.protocol.PacketEncoder;
 import org.allaymc.server.network.protocol.ProtocolData;
 import org.allaymc.server.network.protocol.v1001.Protocol_v1001;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
-import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2168_hotfix5;
+import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2168_hotfix4;
 
 public class Protocol_v2168 extends Protocol_v1001 {
     public Protocol_v2168() {
-        this(Bedrock_v2168_hotfix5.CODEC, ClientVariant.INTERNATIONAL);
+        this(Bedrock_v2168_hotfix4.CODEC, ClientVariant.INTERNATIONAL);
     }
 
     protected Protocol_v2168(BedrockCodec codec, ClientVariant variant) {
