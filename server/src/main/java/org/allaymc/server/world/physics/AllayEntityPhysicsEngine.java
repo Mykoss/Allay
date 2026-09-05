@@ -437,7 +437,7 @@ public class AllayEntityPhysicsEngine implements EntityPhysicsEngine {
                 var motion = event.getTo().sub(player.getLocation(), new Vector3d());
                 var physicsComponent = ((EntityPlayerPhysicsComponentImpl) ((EntityPlayerImpl) player).getPhysicsComponent());
                 if (isUnauthorizedFlightMovement(player, physicsComponent, motion)) {
-                    log.warn("Player {} attempted unauthorized client flight: vertical motion {} after {}", player.getOriginName(), motion.y(), physicsComponent.getLastMotion().y());
+                    log.warn("Player {} attempted unauthorized client flight: vertical motion {} after {}", player.getRuntimeId(), motion.y(), physicsComponent.getLastMotion().y());
                     physicsComponent.setMotionValueOnly(new Vector3d());
                     player.setFlying(false);
                     player.getController().viewPlayerAbilities(player.getController());
