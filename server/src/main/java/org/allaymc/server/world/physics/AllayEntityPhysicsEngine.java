@@ -391,6 +391,21 @@ public class AllayEntityPhysicsEngine implements EntityPhysicsEngine {
         return entity.trySetLocation(loc);
     }
 
+    protected boolean isUnauthorizedFlightMovement(EntityPlayer player, EntityPlayerPhysicsComponentImpl physicsComponent, Vector3dc motion) {
+        if (player.getGameMode() != org.allaymc.api.player.GameMode.SURVIVAL || player.getController().canFly()) {
+            return false;
+        }
+
+        // A normal jump starts while grounded. Once airborne, its vertical velocity
+        // should decrease because gravity is applied by the client. A second jump
+        // (the reported double-jump flight) produces a clear upward velocity reset.
+        if (physicsComponent.isOnGround() || motion.y() <= 0 || physicsComponent.getLastMotion().y() <= 0) {
+            return false;
+        }
+
+        return motion.y() > physicsComponent.getLastMotion().y() + 0.05;
+    }
+
     protected void handleClientMoveQueue() {
         for (var entry : clientMoveQueue.entrySet()) {
             var queue = entry.getValue();
@@ -421,6 +436,13 @@ public class AllayEntityPhysicsEngine implements EntityPhysicsEngine {
                 // Calculate delta pos (motion)
                 var motion = event.getTo().sub(player.getLocation(), new Vector3d());
                 var physicsComponent = ((EntityPlayerPhysicsComponentImpl) ((EntityPlayerImpl) player).getPhysicsComponent());
+                if (isUnauthorizedFlightMovement(player, physicsComponent, motion)) {
+                    log.warn("Player {} attempted unauthorized client flight: vertical motion {} after {}", player.getOriginName(), motion.y(), physicsComponent.getLastMotion().y());
+                    physicsComponent.setMotionValueOnly(new Vector3d());
+                    player.setFlying(false);
+                    player.getController().viewPlayerAbilities(player.getController());
+                    continue;
+                }
                 physicsComponent.setMotionValueOnly(motion);
                 if (player.trySetLocation(clientMove.newLoc())) {
                     entityAABBTree.update(player);
