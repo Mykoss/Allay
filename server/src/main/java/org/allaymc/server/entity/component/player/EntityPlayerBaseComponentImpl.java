@@ -333,6 +333,13 @@ public class EntityPlayerBaseComponentImpl extends EntityBaseComponentImpl imple
 
     @Override
     public void setFlying(boolean flying) {
+        // Never allow an actual player to enter the flying state unless the
+        // server currently authorizes flight. This is the final server-side
+        // guard against client double-jump/START_FLYING desynchronization.
+        if (flying && isActualPlayer() && !this.controller.canFly()) {
+            return;
+        }
+
         if (this.flying != flying) {
             this.flying = flying;
             if (isActualPlayer()) {
