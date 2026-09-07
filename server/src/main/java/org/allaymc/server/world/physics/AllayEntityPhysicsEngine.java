@@ -436,6 +436,7 @@ public class AllayEntityPhysicsEngine implements EntityPhysicsEngine {
                 // Calculate delta pos (motion)
                 var motion = event.getTo().sub(player.getLocation(), new Vector3d());
                 var physicsComponent = ((EntityPlayerPhysicsComponentImpl) ((EntityPlayerImpl) player).getPhysicsComponent());
+                //log.warn("[DEBUG] gm={} canFly={} isFlying={} onGround={} motionY={} lastMotionY={}", player.getGameMode(), player.getController().canFly(), player.isFlying(), physicsComponent.isOnGround(), motion.y(), physicsComponent.getLastMotion().y());
                 if (isUnauthorizedFlightMovement(player, physicsComponent, motion)) {
                     log.warn("Player {} attempted unauthorized client flight: vertical motion {} after {}", player.getRuntimeId(), motion.y(), physicsComponent.getLastMotion().y());
                     physicsComponent.setMotionValueOnly(new Vector3d());

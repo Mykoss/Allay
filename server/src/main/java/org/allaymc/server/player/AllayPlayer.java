@@ -2012,7 +2012,8 @@ public class AllayPlayer implements Player {
             var permissionName = AllayServer.getSettings().genericSettings().defaultPermission().toUpperCase();
             this.abilities.addAll(abilitiesFromPermission(PlayerPermission.valueOf(permissionName)));
 
-            var gameMode = GameMode.from(playerData.getNbt().getInt("PlayerGameMode", NetworkHelper.toNetwork(dimension.getWorld().getWorldData().getGameMode()).ordinal()));
+            //var gameMode = GameMode.from(playerData.getNbt().getInt("PlayerGameMode", NetworkHelper.toNetwork(dimension.getWorld().getWorldData().getGameMode()).ordinal()));
+            var gameMode = GameMode.from(playerData.getNbt().getInt("PlayerGameMode", NetworkHelper.toNetwork(AllayServer.getSettings().genericSettings().defaultGameMode()).ordinal()));
             this.abilities.addAll(gameMode.getAbilities());
         } else {
             this.abilities.addAll(storedAbilities);
