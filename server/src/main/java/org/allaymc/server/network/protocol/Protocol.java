@@ -18,6 +18,7 @@ import org.allaymc.api.item.recipe.descriptor.ItemDescriptor;
 import org.allaymc.api.item.recipe.descriptor.ItemTypeDescriptor;
 import org.allaymc.api.math.voxelshape.VoxelShape;
 import org.allaymc.api.registry.Registries;
+import org.allaymc.api.utils.Utils;
 import org.allaymc.server.block.type.AllayBlockType;
 import org.allaymc.server.block.type.CustomBlockDefinition;
 import org.allaymc.server.block.type.CustomBlockStateDefinition;
@@ -33,6 +34,7 @@ import org.allaymc.server.utils.MolangUtils;
 import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtType;
+import org.cloudburstmc.nbt.NbtUtils;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.data.BlockPropertyData;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
@@ -48,6 +50,9 @@ import org.cloudburstmc.protocol.bedrock.definition.DefinitionRegistry;
 import org.cloudburstmc.protocol.bedrock.definition.SimpleDefinitionRegistry;
 import org.joml.Vector3fc;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.*;
 
 /**
@@ -324,6 +329,10 @@ public abstract class Protocol {
         return null;
     }
 
+    protected String getDataDrivenBlocksResource() {
+        return null;
+    }
+
     protected BlockNetworkIdMapping createBlockNetworkIdMapping() {
         var paletteResource = getBlockPaletteResource();
         if (paletteResource == null) {
@@ -378,6 +387,16 @@ public abstract class Protocol {
      */
     protected List<BlockPropertyData> createCustomBlockProperties() {
         var properties = new ArrayList<BlockPropertyData>();
+        var dataDrivenBlocks = getDataDrivenBlocksResource();
+        if (dataDrivenBlocks != null) {
+            try (var reader = NbtUtils.createGZIPReader(new BufferedInputStream(Utils.getResource(dataDrivenBlocks)))) {
+                var definitions = (NbtMap) reader.readTag();
+                new TreeMap<>(definitions).forEach((name, definition) ->
+                        properties.add(new BlockPropertyData(name, (NbtMap) definition)));
+            } catch (IOException exception) {
+                throw new UncheckedIOException("Unable to read data-driven block definitions: " + dataDrivenBlocks, exception);
+            }
+        }
         var blockTypes = Registries.BLOCKS.getContent().values().stream()
                 .map(blockType -> (AllayBlockType<?>) blockType)
                 .filter(blockType -> blockType.getCustomBlockDefinition() != null)
