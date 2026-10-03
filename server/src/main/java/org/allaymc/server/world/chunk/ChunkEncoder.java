@@ -16,6 +16,10 @@ import org.cloudburstmc.nbt.NbtUtils;
  */
 @Slf4j
 public final class ChunkEncoder {
+    public static ByteBuf writeToNetwork(AllayUnsafeChunk chunk) {
+        return writeToNetwork(chunk, BlockState::blockStateHash);
+    }
+
     public static ByteBuf writeToNetwork(AllayUnsafeChunk chunk, IntSerializer<BlockState> blockNetworkId) {
         var byteBuf = ByteBufAllocator.DEFAULT.ioBuffer();
         try {
@@ -46,6 +50,10 @@ public final class ChunkEncoder {
         }
     }
 
+    public static void writeToNetwork(AllayChunkSection section, ByteBuf byteBuf) {
+        writeToNetwork(section, byteBuf, BlockState::blockStateHash);
+    }
+
     public static void writeToNetwork(AllayChunkSection section, ByteBuf byteBuf, IntSerializer<BlockState> blockNetworkId) {
         byteBuf.writeByte(AllayChunkSection.CURRENT_CHUNK_SECTION_VERSION);
         // Block layer count
@@ -61,6 +69,10 @@ public final class ChunkEncoder {
     /**
      * Encode a single section as byte[] blob (blocks only, no block entities).
      */
+    public static byte[] encodeSectionBlob(AllayChunkSection section) {
+        return encodeSectionBlob(section, BlockState::blockStateHash);
+    }
+
     public static byte[] encodeSectionBlob(AllayChunkSection section, IntSerializer<BlockState> blockNetworkId) {
         var byteBuf = ByteBufAllocator.DEFAULT.ioBuffer();
         try {
