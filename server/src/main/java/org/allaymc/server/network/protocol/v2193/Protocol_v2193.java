@@ -26,6 +26,11 @@ public class Protocol_v2193 extends Protocol_v2169 {
     }
 
     @Override
+    protected String getDataDrivenBlocksResource() {
+        return "protocol_palettes/1_26_50_data_driven_blocks.nbt";
+    }
+
+    @Override
     protected PacketEncoder createEncoder(ProtocolData data) {
         return new PacketEncoder_v2193(data);
     }
