@@ -31,6 +31,18 @@ public record ProtocolData(
         RecipeTable recipeTable,
         BlockNetworkIdMapping blockNetworkIds
 ) {
+    public ProtocolData(
+            List<ItemDefinition> itemDefinitions,
+            List<BlockDefinition> blockDefinitions,
+            List<CreativeItemGroup> creativeGroups,
+            List<CreativeItemData> creativeItems,
+            List<BlockPropertyData> customBlockProperties,
+            RecipeTable recipeTable
+    ) {
+        this(itemDefinitions, blockDefinitions, creativeGroups, creativeItems, customBlockProperties,
+                recipeTable, BlockNetworkIdMapping.identity());
+    }
+
     public ProtocolData {
         itemDefinitions = List.copyOf(Objects.requireNonNull(itemDefinitions, "itemDefinitions"));
         blockDefinitions = List.copyOf(Objects.requireNonNull(blockDefinitions, "blockDefinitions"));
