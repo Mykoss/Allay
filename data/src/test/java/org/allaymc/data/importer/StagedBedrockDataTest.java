@@ -28,10 +28,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class StagedBedrockDataTest {
 
-    private static final Path RESOURCES = Path.of("data/resources");
+    // Keep migration comparisons anchored to their original 1.26.30 input, even after promotion.
+    private static final Path RESOURCES = Path.of("data/src/test/resources/baseline-1.26.30");
     private static final Path UNPACKED = RESOURCES.resolve("unpacked");
-    private static final Path STAGING = UNPACKED.resolve("staging-1.26.50");
-    private static final Path OFFICIAL_PALETTE = RESOURCES.resolve("protocol_palettes/1_26_50.nbt");
+    private static final Path STAGING = Path.of("data/resources/unpacked/staging-1.26.50");
+    private static final Path OFFICIAL_PALETTE = Path.of("data/resources/protocol_palettes/1_26_50.nbt");
 
     /**
      * 26.50 fizik verisinde bugünkü 26.30 verisinden farklı çıkan alanlar (CloudburstMC/Data {@code blocks.json}). Kiraz
