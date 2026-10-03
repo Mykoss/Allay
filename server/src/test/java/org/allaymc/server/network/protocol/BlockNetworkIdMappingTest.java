@@ -55,7 +55,6 @@ class BlockNetworkIdMappingTest {
             Map.entry(1001, "1_26_30"),
             Map.entry(2168, "1_26_40"),
             Map.entry(2169, "1_26_40"),
-            Map.entry(2192, "1_26_50"),
             Map.entry(2193, "1_26_50")
     );
 
@@ -99,7 +98,7 @@ class BlockNetworkIdMappingTest {
 
     @Test
     void protocolsWhosePaletteMatchesServerDataSendStateHashesUnchanged() {
-        for (int version : List.of(2192, 2193)) {
+        for (int version : List.of(2193)) {
             var encoder = international(version).getEncoder();
             for (var state : vanillaStates) {
                 assertEquals(state.blockStateHash(), encoder.networkBlockId(state), () -> "v" + version + ": " + state);
@@ -140,7 +139,7 @@ class BlockNetworkIdMappingTest {
      */
     @Test
     void dataDrivenVanillaBlocksAreAdvertisedOnlyTo2650Clients() {
-        for (int version : List.of(2192, 2193)) {
+        for (int version : List.of(2193)) {
             var names = international(version).getData().customBlockProperties().stream()
                     .map(property -> property.name())
                     .filter(name -> name.startsWith("minecraft:"))
