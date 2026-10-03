@@ -8,6 +8,7 @@ import org.allaymc.api.utils.hash.HashUtils;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtType;
 import org.cloudburstmc.nbt.NbtUtils;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedInputStream;
@@ -33,6 +34,7 @@ class BedrockDataTest {
     /** Veri sürümünün resmî paleti; veri güncellenince bu yol da güncellenir. */
     private static final Path OFFICIAL_PALETTE = RESOURCES.resolve("protocol_palettes/1_26_50.nbt");
     private static final Path DATA_DRIVEN_BLOCKS = RESOURCES.resolve("protocol_palettes/1_26_50_data_driven_blocks.nbt");
+    private static final Path BDS_DUMP = UNPACKED.resolve("bds_registry_dump.json");
     private static final int UNKNOWN_HASH = -2;
     private static final int FUEL_STEP_TICKS = 50;
 
@@ -61,7 +63,7 @@ class BedrockDataTest {
         var blockTypes = readJson(RESOURCES.resolve("block_types.json")).getAsJsonObject();
         assertEquals(paletteTypes, blockTypes.keySet());
 
-        var dump = readJson(UNPACKED.resolve("bds_registry_dump.json")).getAsJsonObject().getAsJsonObject("blocks");
+        var dump = requireBdsDump().getAsJsonObject("blocks");
         for (var name : paletteTypes) {
             var type = blockTypes.getAsJsonObject(name);
             var defaultHash = (int) type.get("defaultBlockStateHash").getAsLong();
@@ -89,7 +91,7 @@ class BedrockDataTest {
         items.entrySet().forEach(entry ->
                 assertTrue(ids.add(entry.getValue().getAsJsonObject().get("id").getAsInt()), "yinelenen kimlik: " + entry.getKey()));
 
-        var dump = readJson(UNPACKED.resolve("bds_registry_dump.json")).getAsJsonObject();
+        var dump = requireBdsDump();
         var measuredItems = dump.getAsJsonObject("items");
         var fuel = dump.getAsJsonObject("fuel");
         for (var entry : items.entrySet()) {
@@ -187,6 +189,14 @@ class BedrockDataTest {
         try (var reader = NbtUtils.createGZIPReader(new BufferedInputStream(Files.newInputStream(path)))) {
             return (NbtMap) reader.readTag();
         }
+    }
+
+    private static JsonObject requireBdsDump() throws IOException {
+        Assumptions.assumeTrue(
+                Files.isRegularFile(BDS_DUMP),
+                "BDS 1.26.50 oracle dump is not versioned; place bds_registry_dump.json in data/resources/unpacked to run oracle checks"
+        );
+        return readJson(BDS_DUMP).getAsJsonObject();
     }
 
     private static JsonElement readJson(Path path) throws IOException {

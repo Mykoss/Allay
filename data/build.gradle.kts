@@ -12,7 +12,7 @@ tasks.test {
 
 tasks.register<JavaExec>("importBedrockData") {
     group = "data"
-    description = "26.50 veri setini herkese açık kaynaklardan staging-1.26.50'ye üretir (ağ gerekir)"
+    description = "26.50 veri setini staging-1.26.50'ye üretir (ağ ve yerel bds_registry_dump.json gerekir)"
     classpath = sourceSets["main"].runtimeClasspath
     mainClass = "org.allaymc.data.importer.BedrockDataImporter"
     workingDir = rootProject.projectDir
