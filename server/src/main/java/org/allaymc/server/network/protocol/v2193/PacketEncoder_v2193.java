@@ -2,16 +2,41 @@ package org.allaymc.server.network.protocol.v2193;
 
 import org.allaymc.server.network.protocol.ProtocolData;
 import org.allaymc.server.network.protocol.v2169.PacketEncoder_v2169;
+import org.cloudburstmc.protocol.bedrock.data.definitions.DimensionDefinition;
+import org.cloudburstmc.protocol.bedrock.packet.DimensionDataPacket;
 
 /**
  * Encoder for Bedrock protocol 2193.
- *
- * Protocol-specific wire changes are handled by the codec; server packet
- * construction can be specialized here when 2193-only fields are required.
  */
 public class PacketEncoder_v2193 extends PacketEncoder_v2169 {
 
     public PacketEncoder_v2193(ProtocolData data) {
         super(data);
+    }
+
+    @Override
+    public DimensionDataPacket encodeDimensionData() {
+        var packet = super.encodeDimensionData();
+        for (int i = 0; i < packet.getDefinitions().size(); i++) {
+            var definition = packet.getDefinitions().get(i);
+            packet.getDefinitions().set(i, new DimensionDefinition(
+                    definition.id(),
+                    definition.maximumHeight(),
+                    definition.minimumHeight(),
+                    definition.generatorType(),
+                    definition.dimensionType(),
+                    definition.packId(),
+                    defaultBiome(definition.id())
+            ));
+        }
+        return packet;
+    }
+
+    private static String defaultBiome(String dimensionId) {
+        return switch (dimensionId) {
+            case "minecraft:nether" -> "minecraft:nether_wastes";
+            case "minecraft:the_end", "minecraft:the-end" -> "minecraft:the_end";
+            default -> "minecraft:plains";
+        };
     }
 }
