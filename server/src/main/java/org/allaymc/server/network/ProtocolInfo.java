@@ -5,7 +5,7 @@ import org.allaymc.api.utils.SemVersion;
 import org.allaymc.server.network.protocol.ClientVariant;
 import org.allaymc.server.network.protocol.ProtocolRegistry;
 import org.allaymc.updater.block.BlockStateUpdater;
-import org.allaymc.updater.block.BlockStateUpdater_1_21_110;
+import org.allaymc.updater.block.BlockStateUpdater_1_26_50;
 import org.allaymc.updater.item.ItemStateUpdater;
 import org.allaymc.updater.item.ItemStateUpdater_1_26_20;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
@@ -31,12 +31,12 @@ public final class ProtocolInfo {
      * This is different from the current game version. It should match the nearest version
      * that has block state changes.
      */
-    public static final SemVersion BLOCK_STATE_VERSION = new SemVersion(1, 21, 110, 26, 0);
+    public static final SemVersion BLOCK_STATE_VERSION = new SemVersion(1, 26, 50, 0, 0);
 
     /**
      * The currently used block state updater instance.
      */
-    public static final BlockStateUpdater BLOCK_STATE_UPDATER = BlockStateUpdater_1_21_110.INSTANCE;
+    public static final BlockStateUpdater BLOCK_STATE_UPDATER = BlockStateUpdater_1_26_50.INSTANCE;
 
     /**
      * The currently used item state updater instance.
