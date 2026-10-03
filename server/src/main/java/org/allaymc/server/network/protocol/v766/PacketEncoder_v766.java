@@ -1,5 +1,6 @@
 package org.allaymc.server.network.protocol.v766;
 
+import org.allaymc.api.item.ItemStack;
 import io.netty.buffer.Unpooled;
 import org.allaymc.api.AllayAPI;
 import org.allaymc.api.block.action.BlockAction;
@@ -833,6 +834,18 @@ public class PacketEncoder_v766 extends PacketEncoder {
                 null
         ));
         packet.setItem(encodeItemStack(container.getItemStack(slot)));
+        return packet;
+    }
+
+    @Override
+    public InventorySlotPacket encodeCrafterRecipePreview(int containerId, ItemStack result) {
+        Objects.requireNonNull(result, "result");
+        var packet = new InventorySlotPacket();
+        packet.setContainerId(containerId);
+        // The preview is client slot 50, outside the crafter's nine stored input slots.
+        packet.setSlot(50);
+        packet.setContainerNameData(new FullContainerName(ContainerSlotType.CRAFTER_BLOCK_CONTAINER, null));
+        packet.setItem(encodeItemStack(result));
         return packet;
     }
 

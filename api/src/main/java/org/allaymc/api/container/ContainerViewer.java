@@ -1,5 +1,8 @@
 package org.allaymc.api.container;
 
+import org.allaymc.api.container.interfaces.CrafterContainer;
+import org.allaymc.api.item.ItemStack;
+
 import java.util.Set;
 
 /**
@@ -51,6 +54,16 @@ public interface ContainerViewer {
      * @throws IllegalStateException if this viewer hasn't opened the container
      */
     void viewContainerData(Container container, int property, int value);
+
+    /**
+     * Displays the crafter's read-only recipe result without adding an inventory slot.
+     * Viewers without a recipe preview may ignore this notification.
+     *
+     * @param container the opened crafter
+     * @param result the recipe output, or air to clear the preview
+     */
+    default void viewCrafterRecipePreview(CrafterContainer container, ItemStack result) {
+    }
 
     /**
      * Get the container that is opened with a specific type.

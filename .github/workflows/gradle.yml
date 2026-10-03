@@ -56,7 +56,18 @@ jobs:
       - name: Build
         run: |
           chmod +x gradlew
-          ./gradlew build
+          ./gradlew build --continue
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: |
+            data/build/reports/tests/
+            data/build/test-results/
+            server/build/reports/tests/
+            server/build/test-results/
 
       - name: Generate Coverage Reports
         if: success()

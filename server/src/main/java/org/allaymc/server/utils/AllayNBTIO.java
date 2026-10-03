@@ -14,6 +14,7 @@ import org.allaymc.api.item.interfaces.ItemAirStack;
 import org.allaymc.api.registry.Registries;
 import org.allaymc.api.utils.NBTIO;
 import org.allaymc.api.utils.identifier.Identifier;
+import org.allaymc.api.utils.identifier.InvalidIdentifierException;
 import org.allaymc.api.world.Dimension;
 import org.allaymc.server.network.ProtocolInfo;
 import org.allaymc.updater.block.BlockStateUpdaters;
@@ -32,17 +33,19 @@ public class AllayNBTIO implements NBTIO {
     public BlockState fromBlockStateNBT(NbtMap nbt) {
         // Always update the nbt if we can't find the version field
         var version = nbt.getInt("version", 0);
-        if (version > ProtocolInfo.BLOCK_STATE_VERSION_NUM) {
-            log.warn("Block state version is too new: {}", nbt);
-            return BlockTypes.UNKNOWN.getDefaultState();
-        }
-
+        // Newer versions can still contain states this server recognizes. Do not downgrade them.
         if (version < ProtocolInfo.BLOCK_STATE_VERSION_NUM) {
             nbt = BlockStateUpdaters.updateBlockState(nbt, ProtocolInfo.BLOCK_STATE_UPDATER.getVersion());
         }
 
         // Get the block type
-        var blockType = Registries.BLOCKS.get(new Identifier(nbt.getString("name")));
+        Identifier identifier;
+        try {
+            identifier = new Identifier(nbt.getString("name"));
+        } catch (InvalidIdentifierException exception) {
+            return BlockTypes.UNKNOWN.getDefaultState();
+        }
+        var blockType = Registries.BLOCKS.get(identifier);
         if (blockType == null) {
             log.warn("Unknown block type {}", nbt.getString("name"));
             return BlockTypes.UNKNOWN.getDefaultState();
@@ -63,7 +66,19 @@ public class AllayNBTIO implements NBTIO {
         // Create the block property value list
         var blockPropertyValues = new ArrayList<BlockPropertyType.BlockPropertyValue<?, ?, ?>>();
         for (var entry : states.entrySet()) {
-            blockPropertyValues.add(blockType.getProperties().get(entry.getKey()).tryCreateValue(entry.getValue()));
+            var property = blockType.getProperties().get(entry.getKey());
+            if (property == null) {
+                return BlockTypes.UNKNOWN.getDefaultState();
+            }
+            try {
+                var value = property.tryCreateValue(entry.getValue());
+                if (value == null) {
+                    return BlockTypes.UNKNOWN.getDefaultState();
+                }
+                blockPropertyValues.add(value);
+            } catch (IllegalArgumentException | ClassCastException exception) {
+                return BlockTypes.UNKNOWN.getDefaultState();
+            }
         }
 
         // Get the block state
@@ -100,7 +115,13 @@ public class AllayNBTIO implements NBTIO {
 
     @Override
     public Entity fromEntityNBT(Dimension dimension, NbtMap nbt) {
-        var identifier = new Identifier(nbt.getString("identifier"));
+        Identifier identifier;
+        try {
+            identifier = new Identifier(nbt.getString("identifier"));
+        } catch (InvalidIdentifierException exception) {
+            log.warn("Skipping entity with invalid identifier {}", nbt.getString("identifier"));
+            return null;
+        }
         var entityType = Registries.ENTITIES.get(identifier);
         if (entityType == null) {
             log.warn("Unknown entity type {}", identifier);

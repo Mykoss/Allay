@@ -18,7 +18,7 @@ import org.allaymc.server.component.annotation.Dependency;
  */
 public class BlockChestBaseComponentImpl extends BlockBaseComponentImpl {
     @Dependency
-    private BlockBlockEntityHolderComponent<BlockEntityChest> blockEntityHolderComponent;
+    protected BlockBlockEntityHolderComponent<BlockEntityChest> blockEntityHolderComponent;
 
     public BlockChestBaseComponentImpl(BlockType<? extends BlockBehavior> blockType) {
         super(blockType);
@@ -34,11 +34,18 @@ public class BlockChestBaseComponentImpl extends BlockBaseComponentImpl {
         }
 
         var thisChest = blockEntityHolderComponent.getBlockEntity(oldBlock.getPosition());
+        if (thisChest == null || thisChest.isPaired()) {
+            return;
+        }
 
         var direction = newBlockState.getPropertyValue(BlockPropertyTypes.MINECRAFT_CARDINAL_DIRECTION);
         var blockFace = BlockFace.from(direction);
         for (var face : new BlockFace[]{blockFace.rotateY(), blockFace.rotateYCCW()}) {
-            var other = oldBlock.offsetPos(face).getBlockEntity();
+            var neighbor = oldBlock.offsetPos(face);
+            if (!canPairWith(newBlockState, neighbor.getBlockState())) {
+                continue;
+            }
+            var other = neighbor.getBlockEntity();
             if (other instanceof BlockEntityChest otherChest && !otherChest.isPaired()) {
                 if (direction == otherChest.getBlockState().getPropertyValue(BlockPropertyTypes.MINECRAFT_CARDINAL_DIRECTION)) {
                     if (otherChest.tryPairWith(thisChest)) {
@@ -48,6 +55,13 @@ public class BlockChestBaseComponentImpl extends BlockBaseComponentImpl {
                 }
             }
         }
+    }
+
+    /**
+     * Returns whether the neighboring block belongs to a compatible chest family.
+     */
+    protected boolean canPairWith(BlockState blockState, BlockState neighborBlockState) {
+        return blockState.getBlockType() == neighborBlockState.getBlockType();
     }
 
     @Override
