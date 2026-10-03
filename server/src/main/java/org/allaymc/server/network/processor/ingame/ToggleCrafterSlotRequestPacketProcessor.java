@@ -53,7 +53,6 @@ public class ToggleCrafterSlotRequestPacketProcessor extends PacketProcessor<Tog
 
         container.setSlotDisabled(slot, packet.isDisabled());
         crafter.syncSlotMaskToViewers();
-        crafter.syncRecipePreviewToViewers();
 
         if (packet.isDisabled()) {
             dimension.addSound(MathUtils.center(new Vector3i(x, y, z)), new CustomSound(SoundNames.CRAFTER_DISABLE_SLOT));

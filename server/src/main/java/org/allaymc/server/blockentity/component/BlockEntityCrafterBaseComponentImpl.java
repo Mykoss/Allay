@@ -22,7 +22,6 @@ import org.allaymc.api.world.particle.ShootParticle;
 import org.allaymc.api.world.sound.CustomSound;
 import org.allaymc.api.world.sound.SoundNames;
 import org.allaymc.server.component.annotation.Dependency;
-import org.allaymc.server.component.annotation.OnInitFinish;
 import org.allaymc.server.item.recipe.CraftingRecipeMatcher;
 import org.cloudburstmc.nbt.NbtMap;
 import org.joml.Vector3d;
@@ -42,32 +41,9 @@ public class BlockEntityCrafterBaseComponentImpl extends BlockEntityBaseComponen
     protected boolean awaitingPowerRelease;
     protected boolean pendingCraft;
     protected Recipe lastRecipe;
-    protected long lastPreviewSyncTick = -1;
 
     public BlockEntityCrafterBaseComponentImpl(BlockEntityInitInfo initInfo) {
         super(initInfo);
-    }
-
-    @Override
-    @OnInitFinish
-    public void onInitFinish(BlockEntityInitInfo initInfo) {
-        super.onInitFinish(initInfo);
-
-        var container = getContainer();
-        container.addOpenListener(viewer -> syncRecipePreviewToViewers());
-        for (int slot = 0; slot < CrafterContainer.SIZE; slot++) {
-            container.addSlotChangeListener(slot, itemStack -> syncRecipePreviewOnSlotChange());
-        }
-    }
-
-    protected void syncRecipePreviewOnSlotChange() {
-        var tick = position.dimension().getWorld().getTick();
-        if (lastPreviewSyncTick == tick) {
-            return;
-        }
-
-        lastPreviewSyncTick = tick;
-        syncRecipePreviewToViewers();
     }
 
     @Override
@@ -159,7 +135,6 @@ public class BlockEntityCrafterBaseComponentImpl extends BlockEntityBaseComponen
         ejectResults(outputs, facing, craftCount);
         consumeBatch(container, inputSlots, craftCount);
         playCraftEffects(facing);
-        syncRecipePreviewToViewers();
         return craftCount;
     }
 
@@ -192,30 +167,6 @@ public class BlockEntityCrafterBaseComponentImpl extends BlockEntityBaseComponen
         }
 
         return limitByOutputCapacity(computeMaxCraftRepetitions(container, inputSlots), outputs, getOutputFacing()) > 0;
-    }
-
-    @Override
-    public void syncRecipePreviewToViewers() {
-        var container = getContainer();
-        if (container.getViewers().isEmpty()) {
-            return;
-        }
-
-        ItemStack preview = ItemAirStack.AIR_STACK;
-        if (areAllEnabledSlotsFilled(container)) {
-            var input = (CraftingRecipeInput) container.createRecipeInput();
-            var recipe = CraftingRecipeMatcher.match(input, lastRecipe);
-            if (recipe != null) {
-                lastRecipe = recipe;
-                var outputs = CraftingRecipeMatcher.outputsOf(recipe, input);
-                if (outputs != null && outputs.length > 0) {
-                    preview = outputs[0].copy(false);
-                }
-            }
-        }
-
-        var finalPreview = preview;
-        container.getViewers().forEach((id, viewer) -> viewer.viewCrafterRecipePreview(container, finalPreview));
     }
 
     @Override

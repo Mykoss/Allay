@@ -16,7 +16,6 @@ public interface BlockEntityCrafterBaseComponent extends BlockEntityBaseComponen
 
     boolean canCraftMore();
 
-    void syncRecipePreviewToViewers();
 
     void syncSlotMaskToViewers();
 }
