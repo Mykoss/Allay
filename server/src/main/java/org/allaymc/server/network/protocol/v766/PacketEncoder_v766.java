@@ -73,6 +73,7 @@ import org.allaymc.server.world.dimension.VanillaGeneratorType;
 import org.cloudburstmc.math.vector.Vector2f;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtType;
 import org.cloudburstmc.protocol.bedrock.data.*;
@@ -221,6 +222,18 @@ public class PacketEncoder_v766 extends PacketEncoder {
                         dimensionType.getId()
                 ))
                 .forEach(packet.getDefinitions()::add);
+        return packet;
+    }
+
+    @Override
+    public JigsawStructureDataPacket encodeJigsawStructureData() {
+        var packet = new JigsawStructureDataPacket();
+        packet.setJigsawStructureDataTag(NbtMap.fromMap(Map.of(
+                "processors", NbtList.EMPTY,
+                "template_pools", NbtList.EMPTY,
+                "jigsaws", NbtList.EMPTY,
+                "structure_sets", NbtList.EMPTY
+        )));
         return packet;
     }
 
