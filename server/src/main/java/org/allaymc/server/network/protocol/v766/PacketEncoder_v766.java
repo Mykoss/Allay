@@ -1,5 +1,6 @@
 package org.allaymc.server.network.protocol.v766;
 
+import org.allaymc.api.item.ItemStack;
 import io.netty.buffer.Unpooled;
 import org.allaymc.api.AllayAPI;
 import org.allaymc.api.block.action.BlockAction;
