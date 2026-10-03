@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.allaymc.api.block.data.BlockTags;
 import org.allaymc.api.block.property.type.BlockPropertyTypes;
 import org.allaymc.api.block.type.BlockState;
+import org.allaymc.api.block.type.BlockTypes;
 import org.allaymc.api.blockentity.BlockEntityInitInfo;
 import org.allaymc.api.blockentity.component.BlockEntityFlowerPotBaseComponent;
 import org.allaymc.api.eventbus.EventHandler;
@@ -21,6 +22,7 @@ public class BlockEntityFlowerPotBaseComponentImpl extends BlockEntityBaseCompon
 
     @Getter
     private BlockState plantBlock;
+    private NbtMap unrecognizedPlant;
 
     public BlockEntityFlowerPotBaseComponentImpl(BlockEntityInitInfo initInfo) {
         super(initInfo);
@@ -33,6 +35,7 @@ public class BlockEntityFlowerPotBaseComponentImpl extends BlockEntityBaseCompon
         }
 
         plantBlock = block;
+        unrecognizedPlant = null;
 
         var position = getPosition();
         var dimension = position.dimension();
@@ -54,6 +57,7 @@ public class BlockEntityFlowerPotBaseComponentImpl extends BlockEntityBaseCompon
         var current = event.getCurrentBlock();
         current.getDimension().dropItem(plantBlock.toItemStack(), MathUtils.center(current.getPosition()));
         plantBlock = null;
+        unrecognizedPlant = null;
     }
 
     @Override
@@ -65,13 +69,21 @@ public class BlockEntityFlowerPotBaseComponentImpl extends BlockEntityBaseCompon
 
         return savedNbt
                 .toBuilder()
-                .putCompound(TAG_PLANT_BLOCK, this.plantBlock.getBlockStateNBT())
+                .putCompound(TAG_PLANT_BLOCK, unrecognizedPlant != null ? unrecognizedPlant : this.plantBlock.getBlockStateNBT())
                 .build();
     }
 
     @Override
     public void loadNBT(NbtMap nbt) {
         super.loadNBT(nbt);
-        nbt.listenForCompound(TAG_PLANT_BLOCK, value -> this.plantBlock = NBTIO.getAPI().fromBlockStateNBT(value));
+        plantBlock = null;
+        unrecognizedPlant = null;
+        nbt.listenForCompound(TAG_PLANT_BLOCK, value -> {
+            plantBlock = NBTIO.getAPI().fromBlockStateNBT(value);
+            // Retain the original tag so saving a world cannot erase an unsupported plant.
+            if (plantBlock.getBlockType() == BlockTypes.UNKNOWN) {
+                unrecognizedPlant = value;
+            }
+        });
     }
 }

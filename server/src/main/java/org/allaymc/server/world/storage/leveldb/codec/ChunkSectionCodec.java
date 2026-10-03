@@ -8,22 +8,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.allaymc.api.block.type.BlockState;
 import org.allaymc.api.block.type.BlockTypes;
 import org.allaymc.api.registry.Registries;
-import org.allaymc.api.utils.hash.HashUtils;
+import org.allaymc.api.utils.NBTIO;
+import org.allaymc.api.block.property.type.BlockPropertyType;
+import org.allaymc.api.world.biome.BiomeTypes;
+import org.allaymc.server.block.type.AllayBlockState;
 import org.allaymc.api.world.dimension.DimensionType;
 import org.allaymc.server.datastruct.palette.Palette;
 import org.allaymc.server.datastruct.palette.PaletteException;
 import org.allaymc.server.datastruct.palette.PaletteUtils;
-import org.allaymc.server.network.ProtocolInfo;
 import org.allaymc.server.world.chunk.AllayChunkSection;
 import org.allaymc.server.world.storage.leveldb.LevelDBUtils;
-import org.allaymc.updater.block.BlockStateUpdaters;
 import org.cloudburstmc.nbt.NBTInputStream;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.util.stream.LittleEndianDataInputStream;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.TreeMap;
 
 /**
  * Codec for serializing/deserializing chunk sections.
@@ -92,43 +92,45 @@ public final class ChunkSectionCodec {
     }
 
     private static BlockState fastBlockStateDeserializer(ByteBuf buffer) {
-        int blockStateHash;
+        int start = buffer.readerIndex();
         try (var bufInputStream = new ByteBufInputStream(buffer);
              var input = new LittleEndianDataInputStream(bufInputStream);
              var nbtInputStream = new NBTInputStream(input)) {
-            blockStateHash = PaletteUtils.fastReadBlockStateHash(input, buffer);
-            if (blockStateHash == PaletteUtils.HASH_NOT_LATEST) {
-                var oldNbtMap = (NbtMap) nbtInputStream.readTag();
-                var newNbtMap = BlockStateUpdaters.updateBlockState(oldNbtMap, ProtocolInfo.BLOCK_STATE_UPDATER.getVersion());
-                // Make sure that tree map is used
-                // If the map inside states nbt is not tree map
-                // the block state hash will be wrong!
-                var states = new TreeMap<>(newNbtMap.getCompound("states"));
-                // To calculate the hash of the block state
-                // "name" field must be in the first place
-                var tag = NbtMap.builder()
-                        .putString("name", newNbtMap.getString("name"))
-                        .putCompound("states", NbtMap.fromMap(states))
-                        .build();
-                blockStateHash = HashUtils.fnv1a_32_nbt(tag);
+            int hash = PaletteUtils.fastReadBlockStateHash(input, buffer);
+            if (hash != PaletteUtils.HASH_NOT_LATEST) {
+                var known = Registries.BLOCK_STATE_PALETTE.get(hash);
+                if (known != null) {
+                    return known;
+                }
             }
-        } catch (IOException e) {
-            throw new PaletteException(e);
-        }
 
-        BlockState blockState = Registries.BLOCK_STATE_PALETTE.get(blockStateHash);
-        if (blockState != null) {
-            return blockState;
-        }
+            buffer.readerIndex(start);
+            var original = (NbtMap) nbtInputStream.readTag();
+            var state = NBTIO.getAPI().fromBlockStateNBT(original);
+            if (state.getBlockType() != BlockTypes.UNKNOWN) {
+                return state;
+            }
 
-        log.error("Unknown block state hash {} while loading chunk section", blockStateHash);
-        return BlockTypes.UNKNOWN.getDefaultState();
+            // Use the unknown block in game and on the wire, but preserve storage data verbatim.
+            // Keeping the tag in the palette entry also distinguishes different unsupported states.
+            return new AllayBlockState(BlockTypes.UNKNOWN,
+                    new BlockPropertyType.BlockPropertyValue<?, ?, ?>[0], original,
+                    state.blockStateHash(), state.specialValue());
+        } catch (IOException exception) {
+            throw new PaletteException(exception);
+        }
     }
 
     public static AllayChunkSection[] fillNullSections(AllayChunkSection[] sections, DimensionType dimensionType) {
         for (int i = 0; i < sections.length; i++) {
             if (sections[i] == null) {
-                sections[i] = new AllayChunkSection((byte) (i + dimensionType.minSectionY()));
+                var section = new AllayChunkSection((byte) (i + dimensionType.minSectionY()));
+                var biome = switch (dimensionType.getId()) {
+                    case 1 -> BiomeTypes.HELL;
+                    case 2 -> BiomeTypes.THE_END;
+                    default -> BiomeTypes.PLAINS;
+                };
+                sections[i] = new AllayChunkSection(section.sectionY(), section.blockLayers(), new Palette<>(biome));
             }
         }
         return sections;

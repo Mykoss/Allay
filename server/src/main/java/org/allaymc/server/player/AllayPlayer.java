@@ -653,9 +653,7 @@ public class AllayPlayer implements Player {
         if (getProtocol().getProtocolVersion() == 2168) {
             var item = packet.getItem();
             if (item != null && !item.isNull() && item.isUsingNetId()) {
-                var clearPacket = new InventorySlotPacket();
-                clearPacket.setContainerId(packet.getContainerId());
-                clearPacket.setSlot(packet.getSlot());
+                var clearPacket = packet.clone();
                 clearPacket.setContainerNameData(null);
                 clearPacket.setStorageItem(null);
                 clearPacket.setItem(ItemData.AIR);
