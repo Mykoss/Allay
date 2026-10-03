@@ -837,6 +837,18 @@ public class PacketEncoder_v766 extends PacketEncoder {
     }
 
     @Override
+    public InventorySlotPacket encodeCrafterRecipePreview(int containerId, ItemStack result) {
+        Objects.requireNonNull(result, "result");
+        var packet = new InventorySlotPacket();
+        packet.setContainerId(containerId);
+        // The preview is client slot 50, outside the crafter's nine stored input slots.
+        packet.setSlot(50);
+        packet.setContainerNameData(new FullContainerName(ContainerSlotType.CRAFTER_BLOCK_CONTAINER, null));
+        packet.setItem(encodeItemStack(result));
+        return packet;
+    }
+
+    @Override
     public ContainerOpenPacket encodeContainerOpen(
             Container container,
             byte containerId,

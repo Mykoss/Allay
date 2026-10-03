@@ -295,6 +295,28 @@ class PacketEncoderCompatibilityTest {
     }
 
     @Test
+    void crafterPreviewUsesTheOpenedContainerAndTargetProtocolDefinitions() {
+        for (var variant : ClientVariant.values()) {
+            for (var protocol : registry.getSupported(variant)) {
+                var encoder = protocol.getEncoder();
+                var result = STONE.createItemStack(4);
+                var packet = encoder.encodeCrafterRecipePreview(7, result);
+                assertEquals(7, packet.getContainerId());
+                assertEquals(50, packet.getSlot());
+                assertEquals(org.cloudburstmc.protocol.bedrock.data.inventory.ContainerSlotType.CRAFTER_BLOCK_CONTAINER,
+                        packet.getContainerNameData().container());
+                assertEquals(4, packet.getItem().getCount());
+                assertTrue(protocol.getItemDefinitionRegistry().isRegistered(packet.getItem().getDefinition()));
+                assertPacketEncodes(protocol, packet);
+
+                var clear = encoder.encodeCrafterRecipePreview(7, org.allaymc.api.item.interfaces.ItemAirStack.AIR_STACK);
+                assertTrue(clear.getItem().isNull());
+                assertPacketEncodes(protocol, clear);
+            }
+        }
+    }
+
+    @Test
     void netEaseV860ContainerOpenUsesTargetCodec() {
         var protocol = protocol(ClientVariant.NETEASE, 860);
         var packet = protocol.getEncoder().encodeContainerOpen(

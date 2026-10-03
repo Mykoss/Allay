@@ -309,6 +309,11 @@ public abstract class PacketEncoder {
         return null;
     }
 
+    /** Encodes the read-only crafter result for the assigned container ID. */
+    public InventorySlotPacket encodeCrafterRecipePreview(int containerId, ItemStack result) {
+        return null;
+    }
+
     /**
      * Encodes a request to open a container at a world position.
      *

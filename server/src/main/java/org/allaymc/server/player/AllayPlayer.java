@@ -21,6 +21,7 @@ import org.allaymc.api.container.Container;
 import org.allaymc.api.container.ContainerType;
 import org.allaymc.api.container.ContainerTypes;
 import org.allaymc.api.container.interfaces.BlockContainer;
+import org.allaymc.api.container.interfaces.CrafterContainer;
 import org.allaymc.api.ddui.DDUIScreenSession;
 import org.allaymc.api.ddui.type.DDUIScreen;
 import org.allaymc.api.dialog.Dialog;
@@ -41,6 +42,7 @@ import org.allaymc.api.eventbus.event.server.PlayerSpawnEvent;
 import org.allaymc.api.form.type.CustomForm;
 import org.allaymc.api.form.type.Form;
 import org.allaymc.api.item.enchantment.EnchantOption;
+import org.allaymc.api.item.ItemStack;
 import org.allaymc.api.math.location.Location3d;
 import org.allaymc.api.math.location.Location3dc;
 import org.allaymc.api.message.I18n;
@@ -748,6 +750,15 @@ public class AllayPlayer implements Player {
         }
 
         sendPacket(getProtocol().getEncoder().encodeContainerData(assignedId, property, value));
+    }
+
+    @Override
+    public void viewCrafterRecipePreview(CrafterContainer container, ItemStack result) {
+        var assignedId = idToContainer.inverse().get(container);
+        if (assignedId == null) {
+            throw new IllegalStateException("This viewer did not open the container " + container.getContainerType());
+        }
+        sendPacket(getProtocol().getEncoder().encodeCrafterRecipePreview(assignedId, result));
     }
 
     @SuppressWarnings("unchecked")
