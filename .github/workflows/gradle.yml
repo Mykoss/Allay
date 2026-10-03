@@ -2,7 +2,7 @@ name: Allay
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "update/mcbe-1.26.52-v2193" ]
     paths:
       - .github/workflows/gradle.yml
       - gradle/libs.versions.toml
@@ -10,6 +10,7 @@ on:
       - build.gradle.kts
       - settings.gradle.kts
       - protocol-local
+      - stateupdater-local
       - api/**
       - server/**
       - data/**
