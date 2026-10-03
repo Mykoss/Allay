@@ -65,6 +65,7 @@ public abstract class Protocol {
     private PacketEncoder encoder;
     private DefinitionRegistry<ItemDefinition> itemDefinitionRegistry;
     private DefinitionRegistry<BlockDefinition> blockDefinitionRegistry;
+    private BlockNetworkIdMapping blockNetworkIds;
     private volatile boolean initialized;
 
     /**
@@ -94,6 +95,7 @@ public abstract class Protocol {
         var itemDefinitions = SimpleDefinitionRegistry.<ItemDefinition>builder()
                 .addAll(encodedItemDefinitions)
                 .build();
+        this.blockNetworkIds = Objects.requireNonNull(createBlockNetworkIdMapping(), "createBlockNetworkIdMapping returned null");
         var encodedBlockDefinitions = createBlockDefinitions();
         var blockDefinitions = SimpleDefinitionRegistry.<BlockDefinition>builder()
                 .addAll(encodedBlockDefinitions)
@@ -109,7 +111,8 @@ public abstract class Protocol {
                     createCreativeGroups(),
                     createCreativeItems(),
                     createCustomBlockProperties(),
-                    createRecipeTable()
+                    createRecipeTable(),
+                    blockNetworkIds
             );
             var packetEncoder = Objects.requireNonNull(createEncoder(protocolData), "createEncoder returned null");
             if (packetEncoder.getData() != protocolData) {
@@ -122,6 +125,7 @@ public abstract class Protocol {
         } catch (RuntimeException | Error exception) {
             this.itemDefinitionRegistry = null;
             this.blockDefinitionRegistry = null;
+            this.blockNetworkIds = null;
             throw exception;
         }
     }
@@ -310,8 +314,26 @@ public abstract class Protocol {
     protected List<BlockDefinition> createBlockDefinitions() {
         return Registries.BLOCKS.getContent().values().stream()
                 .flatMap(blockType -> blockType.getAllStates().stream())
-                .map(blockState -> (BlockDefinition) blockState::blockStateHash)
+                .mapToInt(blockNetworkIds::networkId)
+                .distinct()
+                .mapToObj(networkId -> (BlockDefinition) () -> networkId)
                 .toList();
+    }
+
+    protected String getBlockPaletteResource() {
+        return null;
+    }
+
+    protected BlockNetworkIdMapping createBlockNetworkIdMapping() {
+        var paletteResource = getBlockPaletteResource();
+        if (paletteResource == null) {
+            return BlockNetworkIdMapping.identity();
+        }
+
+        var states = Registries.BLOCKS.getContent().values().stream()
+                .flatMap(blockType -> blockType.getAllStates().stream())
+                .toList();
+        return BlockNetworkIdMapping.fromPalette(paletteResource, states);
     }
 
     /**
@@ -873,7 +895,7 @@ public abstract class Protocol {
      * @return the network item data
      */
     protected final ItemData encodeItemStack(ItemStack itemStack) {
-        return NetworkHelper.toNetwork(itemStack, itemDefinitionRegistry, blockDefinitionRegistry);
+        return NetworkHelper.toNetwork(itemStack, itemDefinitionRegistry, blockDefinitionRegistry, blockNetworkIds::networkId);
     }
 
     /**
