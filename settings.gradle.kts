@@ -28,3 +28,27 @@ includeBuild("protocol-local") {
             .using(project(":bedrock-connection"))
     }
 }
+
+
+val requiredStateUpdater = file(
+    "stateupdater-local/block-updater/src/main/java/org/allaymc/updater/block/BlockStateUpdater_1_26_50.java"
+)
+check(requiredStateUpdater.isFile) {
+    """
+    stateupdater-local is missing the required Minecraft 1.26.50 block-state migration.
+    Run these commands before building:
+      git submodule sync --recursive
+      git submodule update --init --recursive
+    """.trimIndent()
+}
+
+includeBuild("stateupdater-local") {
+    dependencySubstitution {
+        substitute(module("org.allaymc.stateupdater:common"))
+            .using(project(":common"))
+        substitute(module("org.allaymc.stateupdater:block-updater"))
+            .using(project(":block-updater"))
+        substitute(module("org.allaymc.stateupdater:item-updater"))
+            .using(project(":item-updater"))
+    }
+}

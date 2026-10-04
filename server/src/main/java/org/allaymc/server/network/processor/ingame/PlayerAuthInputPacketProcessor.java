@@ -76,13 +76,18 @@ public class PlayerAuthInputPacketProcessor extends PacketProcessor<PlayerAuthIn
                entity.getGameMode() == GameMode.SPECTATOR;
     }
 
-    protected void handleMovement(Player player, Vector3f newPos, Vector3f newRot) {
+    protected void handleMovement(Player player, Vector3f newPos, Vector3f newRot, Vector3f clientDelta, long clientTick) {
         var entity = player.getControlledEntity();
         var world = entity.getLocation().dimension();
-        ((AllayEntityPhysicsEngine) world.getEntityManager().getPhysicsService()).offerClientMove(entity, new Location3d(
-                newPos.getX(), newPos.getY(), newPos.getZ(),
-                newRot.getX(), newRot.getY(), world
-        ));
+        ((AllayEntityPhysicsEngine) world.getEntityManager().getPhysicsService()).offerClientMove(
+                entity,
+                new Location3d(
+                        newPos.getX(), newPos.getY(), newPos.getZ(),
+                        newRot.getX(), newRot.getY(), world
+                ),
+                new Vector3d(clientDelta.getX(), clientDelta.getY(), clientDelta.getZ()),
+                clientTick
+        );
     }
 
     protected void handleBlockAction(Player player, List<PlayerBlockActionData> blockActions) {
@@ -416,7 +421,13 @@ public class PlayerAuthInputPacketProcessor extends PacketProcessor<PlayerAuthIn
 
         if (isLocationChanged(player, packet.getPosition(), packet.getRotation())) {
             // The pos which the client sends to the server is higher than the actual coordinates (one base offset)
-            handleMovement(player, packet.getPosition().sub(0, PLAYER_NETWORK_OFFSET, 0), packet.getRotation());
+            handleMovement(
+                    player,
+                    packet.getPosition().sub(0, PLAYER_NETWORK_OFFSET, 0),
+                    packet.getRotation(),
+                    packet.getDelta(),
+                    packet.getTick()
+            );
         }
         handleBlockAction(player, packet.getPlayerActions());
         if (isBreakingBlock() && checkInteractDistance(player)) {

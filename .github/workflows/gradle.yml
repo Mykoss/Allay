@@ -2,7 +2,9 @@ name: Allay
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - master
+      - update/mcbe-1.26.52-v2193
     paths:
       - .github/workflows/gradle.yml
       - gradle/libs.versions.toml
@@ -10,6 +12,7 @@ on:
       - build.gradle.kts
       - settings.gradle.kts
       - protocol-local
+      - stateupdater-local
       - api/**
       - server/**
       - data/**
@@ -21,14 +24,27 @@ on:
       - build.gradle.kts
       - settings.gradle.kts
       - protocol-local
+      - stateupdater-local
       - api/**
       - server/**
       - data/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: allay-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RELEASE_PREFIX: mcbe-1.26.52-v2193
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -37,7 +53,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'zulu'
@@ -62,62 +78,64 @@ jobs:
         run: ./gradlew jacocoTestReport
 
       - name: Upload Coverage Reports to Codecov
-        uses: codecov/codecov-action@v7.0.0
         if: success()
+        uses: codecov/codecov-action@v7.0.0
         with:
           directory: .jacoco/test/
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Find Shaded Jar
-        id: vars
-        run: |
-          SHADED_JAR_PATH=$(find server/build/libs -name "allay-server-*-shaded.jar" -print -quit)
-          SHADED_JAR_NAME=$(basename "$SHADED_JAR_PATH")
-          echo "shaded_jar_path=$SHADED_JAR_PATH" >> $GITHUB_OUTPUT
-          echo "shaded_jar_name=$SHADED_JAR_NAME" >> $GITHUB_OUTPUT
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v7
+      - name: Prepare Shaded Jar
         if: success()
-        with:
-          name: allay-server
-          path: ${{ steps.vars.outputs.shaded_jar_path }}
-
-      - name: Publish to Maven Central
-        if: success() && github.event_name == 'push' && github.repository == 'AllayMC/Allay' && contains(github.ref_name, 'master')
+        id: vars
+        shell: bash
         run: |
-          ./gradlew api:publishToMavenCentral
-          ./gradlew server:publishToMavenCentral
+          set -euo pipefail
+
+          SHADED_JAR_PATH="$(find server/build/libs -name 'allay-server-*-shaded.jar' -print -quit)"
+          if [[ -z "$SHADED_JAR_PATH" ]]; then
+            echo "No shaded Allay JAR was produced."
+            exit 1
+          fi
+
+          RELEASE_TAG="${RELEASE_PREFIX}-build-${GITHUB_RUN_NUMBER}"
+          RELEASE_JAR_NAME="allay-server-${RELEASE_TAG}.jar"
+          RELEASE_JAR_PATH="${RUNNER_TEMP}/${RELEASE_JAR_NAME}"
+
+          cp "$SHADED_JAR_PATH" "$RELEASE_JAR_PATH"
+
+          echo "shaded_jar_path=$SHADED_JAR_PATH" >> "$GITHUB_OUTPUT"
+          echo "release_jar_path=$RELEASE_JAR_PATH" >> "$GITHUB_OUTPUT"
+          echo "release_jar_name=$RELEASE_JAR_NAME" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Jar Artifact
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.vars.outputs.release_jar_path }}
+          archive: false
+
+      - name: Create GitHub Tag and Prerelease
+        if: success() && github.event_name != 'pull_request' && github.repository == 'Mykoss/Allay'
+        shell: bash
         env:
-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_USERNAME }}
-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SONATYPE_SECRET_KEY }}
-          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SONATYPE_SECRET_KEY_PASSWORD }}
-
-      - name: Set Tag
-        if: success() && github.event_name == 'push' && github.repository == 'AllayMC/Allay' && contains(github.ref_name, 'master')
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.vars.outputs.release_tag }}
+          RELEASE_JAR_PATH: ${{ steps.vars.outputs.release_jar_path }}
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag -f -a nightly -m "Nightly build"
-          git push origin -f --follow-tags nightly
+          set -euo pipefail
 
-      - name: Update Nightly Build
-        uses: AllayMC/deploy-nightly@v3.3.0
-        if: success() && github.event_name == 'push' && github.repository == 'AllayMC/Allay' && contains(github.ref_name, 'master')
-        with:
-          upload_url: https://uploads.github.com/repos/AllayMC/Allay/releases/185111149/assets{?name,label}
-          release_id: 185111149
-          asset_path: ./${{ steps.vars.outputs.shaded_jar_path }}
-          asset_name: ${{ steps.vars.outputs.shaded_jar_name }}
-          old_asset_name: allay-server-$$-shaded.jar
-          asset_content_type: application/zip
-          max_releases: 1
+          SHORT_SHA="${GITHUB_SHA::7}"
 
-      - name: Restart Test Server
-        uses: fjogeleit/http-request-action@v2
-        if: success() && github.event_name == 'push' && github.repository == 'AllayMC/Allay' && contains(github.ref_name, 'master')
-        continue-on-error: true
-        with:
-          url: 'http://${{ secrets.TEST_SERVER_HOST }}:${{ secrets.REMOTE_COMMAND_PORT }}/remotecommand?token=${{ secrets.REMOTE_COMMAND_TOKEN }}&command=stop'
-          method: 'POST'
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$RELEASE_JAR_PATH" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          else
+            gh release create "$RELEASE_TAG" "$RELEASE_JAR_PATH" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Allay MCBE 1.26.52 / Protocol 2193 - Build #${GITHUB_RUN_NUMBER}" \
+              --notes "Automated test build from \`${GITHUB_REF_NAME}\` at commit \`${SHORT_SHA}\`. Build and automated tests completed successfully." \
+              --prerelease
+          fi
