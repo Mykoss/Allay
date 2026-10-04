@@ -88,6 +88,7 @@ public class AllayEntityPhysicsEngine implements EntityPhysicsEngine {
     protected Map<Long, Entity> entities = new Long2ObjectOpenHashMap<>();
     protected Map<Long, Queue<ClientMove>> clientMoveQueue = new Long2ObjectOpenHashMap<>();
     protected Map<Long, List<Entity>> entityCollisionCache = new Long2ObjectOpenHashMap<>();
+    protected Map<Long, ClientVerticalMotionSample> clientVerticalMotionSamples = new Long2ObjectOpenHashMap<>();
     /**
      * Regardless of the value of the entity's hasEntityCollision(), this aabb tree saves its collision result
      */
@@ -391,19 +392,60 @@ public class AllayEntityPhysicsEngine implements EntityPhysicsEngine {
         return entity.trySetLocation(loc);
     }
 
-    protected boolean isUnauthorizedFlightMovement(EntityPlayer player, EntityPlayerPhysicsComponentImpl physicsComponent, Vector3dc motion) {
-        if (player.getGameMode() != org.allaymc.api.player.GameMode.SURVIVAL || player.getController().canFly()) {
+    protected boolean isUnauthorizedFlightMovement(
+            EntityPlayer player,
+            EntityPlayerPhysicsComponentImpl physicsComponent,
+            Vector3dc clientDelta,
+            long clientTick
+    ) {
+        var runtimeId = player.getRuntimeId();
+
+        // Do not carry validation state through modes or movement states that can legally alter
+        // vertical velocity independently of a normal jump.
+        if (player.getGameMode() != org.allaymc.api.player.GameMode.SURVIVAL ||
+            player.getController().canFly() ||
+            player.isSwimming() ||
+            player.isGliding() ||
+            player.isSpinAttacking() ||
+            physicsComponent.isOnGround()) {
+            clientVerticalMotionSamples.remove(runtimeId);
             return false;
         }
 
-        // A normal jump starts while grounded. Once airborne, its vertical velocity
-        // should decrease because gravity is applied by the client. A second jump
-        // (the reported double-jump flight) produces a clear upward velocity reset.
-        if (physicsComponent.isOnGround() || motion.y() <= 0 || physicsComponent.getLastMotion().y() <= 0) {
+        var current = new ClientVerticalMotionSample(clientTick, clientDelta.y());
+        var previous = clientVerticalMotionSamples.put(runtimeId, current);
+        if (previous == null) {
             return false;
         }
 
-        return motion.y() > physicsComponent.getLastMotion().y() + 0.05;
+        return isSuspiciousAirborneUpwardBoost(
+                previous.tick(),
+                previous.deltaY(),
+                current.tick(),
+                current.deltaY()
+        );
+    }
+
+    static boolean isSuspiciousAirborneUpwardBoost(
+            long previousTick,
+            double previousDeltaY,
+            long currentTick,
+            double currentDeltaY
+    ) {
+        // PlayerAuthInputPacket is normally emitted once per client tick. Never compare samples
+        // across a gap, duplicate or reordering because their displacement is not time-equivalent.
+        if (currentTick != previousTick + 1) {
+            return false;
+        }
+
+        // Normal vanilla ascent decays every tick. A second client-side jump while already rising
+        // resets the vertical delta upward. The tolerance absorbs float noise without treating
+        // ordinary jump decay as flight.
+        if (previousDeltaY <= 0 || currentDeltaY <= 0) {
+            return false;
+        }
+
+        return currentDeltaY > previousDeltaY + 0.05;
     }
 
     protected void handleClientMoveQueue() {
@@ -433,15 +475,29 @@ public class AllayEntityPhysicsEngine implements EntityPhysicsEngine {
                     continue;
                 }
 
-                // Calculate delta pos (motion)
+                // Calculate the authoritative displacement from the server position for movement/fall handling.
                 var motion = event.getTo().sub(player.getLocation(), new Vector3d());
                 var physicsComponent = ((EntityPlayerPhysicsComponentImpl) ((EntityPlayerImpl) player).getPhysicsComponent());
-                //log.warn("[DEBUG] gm={} canFly={} isFlying={} onGround={} motionY={} lastMotionY={}", player.getGameMode(), player.getController().canFly(), player.isFlying(), physicsComponent.isOnGround(), motion.y(), physicsComponent.getLastMotion().y());
-                if (isUnauthorizedFlightMovement(player, physicsComponent, motion)) {
-                    log.warn("Player {} attempted unauthorized client flight: vertical motion {} after {}", player.getRuntimeId(), motion.y(), physicsComponent.getLastMotion().y());
+
+                // Flight validation must use the per-client-tick delta carried by PlayerAuthInputPacket.
+                // Recomputing it from the server position is incorrect: once a move is rejected the server
+                // position is intentionally stale, which made the next legitimate packet look even faster.
+                if (isUnauthorizedFlightMovement(player, physicsComponent, clientMove.clientDelta(), clientMove.clientTick())) {
+                    var previous = clientVerticalMotionSamples.get(player.getRuntimeId());
+                    log.warn(
+                            "Player {} attempted unauthorized client flight at client tick {}: vertical delta {}",
+                            player.getRuntimeId(),
+                            clientMove.clientTick(),
+                            clientMove.clientDelta().y()
+                    );
                     physicsComponent.setMotionValueOnly(new Vector3d());
                     player.setFlying(false);
                     player.getController().viewPlayerAbilities(player.getController());
+
+                    // Send an authoritative correction and wait for its acknowledgement instead of merely
+                    // dropping the movement. This prevents the client/server position gap from compounding.
+                    player.teleport(player.getLocation());
+                    clientVerticalMotionSamples.remove(player.getRuntimeId());
                     continue;
                 }
                 physicsComponent.setMotionValueOnly(motion);
@@ -481,18 +537,20 @@ public class AllayEntityPhysicsEngine implements EntityPhysicsEngine {
         entities.remove(entity.getRuntimeId());
         entityAABBTree.remove(entity);
         entityCollisionCache.remove(entity.getRuntimeId());
+        clientVerticalMotionSamples.remove(entity.getRuntimeId());
     }
 
     /**
      * Please note that this method usually been called asynchronously <p/>
      * See {@link PacketProcessor#handleAsync(org.allaymc.api.player.Player, BedrockPacket, long)}
      */
-    public void offerClientMove(EntityPlayer player, Location3dc newLoc) {
+    public void offerClientMove(EntityPlayer player, Location3dc newLoc, Vector3dc clientDelta, long clientTick) {
         if (!entities.containsKey(player.getRuntimeId()) || player.getLocation().equals(newLoc)) {
             return;
         }
 
-        clientMoveQueue.computeIfAbsent(player.getRuntimeId(), $ -> new ConcurrentLinkedQueue<>()).offer(new ClientMove(player, newLoc));
+        clientMoveQueue.computeIfAbsent(player.getRuntimeId(), $ -> new ConcurrentLinkedQueue<>())
+                .offer(new ClientMove(player, newLoc, clientDelta, clientTick));
     }
 
     @Override
@@ -525,6 +583,9 @@ public class AllayEntityPhysicsEngine implements EntityPhysicsEngine {
         return result;
     }
 
-    protected record ClientMove(EntityPlayer player, Location3dc newLoc) {
+    protected record ClientMove(EntityPlayer player, Location3dc newLoc, Vector3dc clientDelta, long clientTick) {
+    }
+
+    protected record ClientVerticalMotionSample(long tick, double deltaY) {
     }
 }
